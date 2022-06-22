@@ -15,8 +15,8 @@ author: Antton Lamarca
 def get_matching_rows(filepath, rsids, rsid_col_name='rsid', gene_col_name='gene', chr_col_name='chr',
                       pos_col_name='pos', pval_col_name='pval', beta_col_name='beta'):
     """
-    This function takes a filepath to an eQTL summary stats file and a list of rsIDs. It returns a list of rows where
-    the rsIDs are significant in the eQTL summary stats file.
+    This function takes a filepath to an eQTL summary stats file and a list of rsIDs. It returns a pandas dataframe with
+    the eQTL summary stats for the requested rsIDs.
 
     :param filepath: global path to the eQTL summary stats file
     :param rsids: list of rsIDs to look for in the eQTL summary stats file
@@ -47,24 +47,32 @@ def get_matching_rows(filepath, rsids, rsid_col_name='rsid', gene_col_name='gene
 
 
 args = sys.argv[1:]
+
 if len(args) != 2:
     print("Wrong number of input arguments.")
-    print("Usage: python immunexut_eqtl_lookup.py <list_of_rsIDs> <output_file_location>")
+    print("Usage: python immunexut_eqtl_lookup.py <path_to_eQTL_data_folder> <list_of_rsIDs> <output_file_location>")
     sys.exit(1)
 
+# Store path to eQTL data folder
+eqtl_folder = args[0]
+if not os.path.isdir(eqtl_folder):  # make sure 'eqtl_folder' is a path to a directory
+    print("Path to eQTL data folder is not a directory.")
+    sys.exit(1)
+if eqtl_folder.endswith('/'):
+    eqtl_folder = eqtl_folder[:-1]
+
 # Read rsID list
-rsID_list_file = args[0]
+rsID_list_file = args[1]
 with open(rsID_list_file, 'r') as f:
     rsID_list = f.read().splitlines()
 
 # Save output file name
-output_filename = args[1]
+output_filename = args[2]
 
 # Iterate over all eQTL data files
 df = pd.DataFrame()
-eqtl_folder = '/home/antton/cbio3/projects/Zain_2021/ImmuNEXT_Japan_Cell2021/eQTL_summarystats'  # TODO: should be input
-# count number of .txt files in eqtl_folder
-num_files = len([f for f in os.listdir(eqtl_folder) if f.endswith('.txt')])
+num_files = len([f for f in os.listdir(eqtl_folder) if f.endswith('.txt')])  # count number of .txt files in eqtl_folder
+
 counter = 0
 for file in os.listdir(eqtl_folder):
     if file.endswith('.txt'):
