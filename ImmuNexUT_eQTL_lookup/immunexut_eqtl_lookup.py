@@ -48,51 +48,54 @@ def get_matching_rows(filepath, rsids, rsid_col_name='rsid', gene_col_name='gene
     return out_df
 
 
-args = sys.argv[1:]
+if __name__ == '__main__':
 
-if len(args) != 3:
-    print("Wrong number of input arguments.")
-    print("Usage: python immunexut_eqtl_lookup.py <path_to_eQTL_data_folder> <list_of_rsIDs> <output_file_location>")
-    sys.exit(1)
+    args = sys.argv[1:]
 
-# Store path to eQTL data folder
-eqtl_folder = args[0]
-if not os.path.isdir(eqtl_folder):  # make sure 'eqtl_folder' is a path to a directory
-    print("Path to eQTL data folder is not a directory.")
-    sys.exit(1)
-if eqtl_folder.endswith('/'):
-    eqtl_folder = eqtl_folder[:-1]
+    if len(args) != 3:
+        print("Wrong number of input arguments.")
+        print("Usage: python immunexut_eqtl_lookup.py <path_to_eqtl_data_folder> <rsID_list> <output_file>")
+        sys.exit(1)
 
-# Read rsID list
-rsID_list_file = args[1]
-with open(rsID_list_file, 'r') as f:
-    rsID_list = f.read().splitlines()
+    # Store path to eQTL data folder
+    eqtl_folder = args[0]
+    if not os.path.isdir(eqtl_folder):  # make sure 'eqtl_folder' is a path to a directory
+        print("Path to eQTL data folder is not a directory.")
+        sys.exit(1)
+    if eqtl_folder.endswith('/'):
+        eqtl_folder = eqtl_folder[:-1]
 
-# Save output file name
-output_filename = args[2]
+    # Read rsID list
+    rsID_list_file = args[1]
+    with open(rsID_list_file, 'r') as f:
+        rsID_list = f.read().splitlines()
 
-# Iterate over all eQTL data files
-df = pd.DataFrame()
-num_files = len([f for f in os.listdir(eqtl_folder) if f.endswith('.txt')])  # count number of .txt files in eqtl_folder
+    # Save output file name
+    output_filename = args[2]
 
-counter = 0
-for file in os.listdir(eqtl_folder):
-    if file.endswith('.txt'):
-        counter += 1
-        print(f'File {counter}/{num_files}: {file}')
+    # Iterate over all eQTL data files
+    df = pd.DataFrame()
+    num_files = len([f for f in os.listdir(eqtl_folder) if f.endswith('.txt')])  # count # of .txt files in eqtl_folder
 
-        full_filepath = f'{eqtl_folder}/{file}'  # eQTL data global file path
-        matching_rows_df = get_matching_rows(full_filepath, rsID_list, rsid_col_name="Variant_ID",
-                                             gene_col_name="Gene_name", chr_col_name="Variant_CHR",
-                                             pos_col_name="Variant_position_start", pval_col_name="Forward_nominal_P",
-                                             beta_col_name="Forward_slope")
-        matching_rows_df.insert(6, 'cell_type', '_'.join(file.split('_')[:-3]))  # Get cell type from file name
+    counter = 0
+    for file in os.listdir(eqtl_folder):
+        if file.endswith('.txt'):
+            counter += 1
+            print(f'File {counter}/{num_files}: {file}')
 
-        df = pd.concat([df, matching_rows_df])
+            full_filepath = f'{eqtl_folder}/{file}'  # eQTL data global file path
+            matching_rows_df = get_matching_rows(full_filepath, rsID_list, rsid_col_name="Variant_ID",
+                                                 gene_col_name="Gene_name", chr_col_name="Variant_CHR",
+                                                 pos_col_name="Variant_position_start",
+                                                 pval_col_name="Forward_nominal_P",
+                                                 beta_col_name="Forward_slope")
+            matching_rows_df.insert(6, 'cell_type', '_'.join(file.split('_')[:-3]))  # Get cell type from file name
 
-# Sort by chromosome, position and gene name.
-# We temporarily add a chr_num column to the dataframe to sort by chromosome number correctly, and drop de column after.
-df['chr_num'] = df['chromosome'].apply(lambda x: int(x.split('chr')[1]))
-df.sort_values(by=['chr_num', 'position_hg38', 'gene'], inplace=True)
-df.drop(columns=['chr_num'], inplace=True)
-df.to_csv(output_filename, sep='\t', index=False)
+            df = pd.concat([df, matching_rows_df])
+
+    # Sort by chromosome, position and gene name.
+    # We temporarily add a chr_num column to the df to sort by chromosome number correctly, and drop de column after.
+    df['chr_num'] = df['chromosome'].apply(lambda x: int(x.split('chr')[1]))
+    df.sort_values(by=['chr_num', 'position_hg38', 'gene'], inplace=True)
+    df.drop(columns=['chr_num'], inplace=True)
+    df.to_csv(output_filename, sep='\t', index=False)
