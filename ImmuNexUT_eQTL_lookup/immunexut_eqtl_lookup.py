@@ -5,7 +5,9 @@ import os
 """
 This script takes a list of rsIDs and checks the eQTL summary stats files for rows where these rsIDs appear.
 Each eQTL data file is a different cell type in the ImmuNexUT dataset. Note that these files only contain associations
-with FDR < 0.05. If we want to use other eQTL data files, we will need to implement some sort of p-value/FDR threshold. 
+with FDR < 0.05. If we want to use other eQTL data files, we will need to implement some sort of p-value/FDR threshold.
+
+Usage: python immunexut_eqtl_lookup.py <path_to_eQTL_data_folder> <list_of_rsIDs> <output_file_location> 
 
 author: Antton Lamarca
 2022-06-21
@@ -48,7 +50,7 @@ def get_matching_rows(filepath, rsids, rsid_col_name='rsid', gene_col_name='gene
 
 args = sys.argv[1:]
 
-if len(args) != 2:
+if len(args) != 3:
     print("Wrong number of input arguments.")
     print("Usage: python immunexut_eqtl_lookup.py <path_to_eQTL_data_folder> <list_of_rsIDs> <output_file_location>")
     sys.exit(1)
