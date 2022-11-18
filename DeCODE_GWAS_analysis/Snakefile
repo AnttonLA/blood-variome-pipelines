@@ -1,0 +1,13 @@
+import numpy as np
+
+configfile: config.yaml
+
+config['pval'] = float(config['pval'])  # '1e-4' format is read as a string, not a float, so we need to convert it
+
+rule extract_significant_variants:
+    input: "variant_info_extra.txt", "path/to/other/inputfile"
+    params:
+        pval = -np.log10(config['pval'])
+    output: "path/to/outputfile"
+    shell:
+        "python extract_variants_by_pval.py {input} -p {params.pval} -o {output}"

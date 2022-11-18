@@ -1,0 +1,3 @@
+var_info_folder: 'path/to/folder'
+gwas_gzip_folder: 'path/to/other/folder'
+pval_threshold: 1e-6
