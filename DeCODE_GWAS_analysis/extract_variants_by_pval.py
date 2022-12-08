@@ -39,7 +39,7 @@ def print_status(percent):
 # Read variant info file, then merge it with the GWAS output files
 var_info_df = pl.read_csv(args.variant_info_file, sep='\t', columns=["ID", "Marker", "OA", "EA", "EAF", "Info"])
 
-pval_threshold = 10 ** -args.pval_thresh
+pval_threshold = 10 ** -float(args.pval_thresh)
 chi2_threshold = chi2.isf(pval_threshold, 1)
 
 

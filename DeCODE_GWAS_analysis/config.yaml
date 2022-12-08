@@ -1,3 +1,6 @@
-var_info_folder: 'path/to/folder'
-gwas_gzip_folder: 'path/to/other/folder'
-pval_threshold: 1e-6
+var_info_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/'
+gwas_gzip_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/'
+global_project_dir: '/home/antton/Projects/Immune_GWAS/'
+raw_data_dir: '/home/antton/Projects/Immune_GWAS/data/raw/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/'
+intermediate_data_dir: '/home/antton/Projects/Immune_GWAS/data/intermediate/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/'
+pval_thresh: 1e-6
