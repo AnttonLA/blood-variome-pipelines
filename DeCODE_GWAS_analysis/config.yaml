@@ -1,6 +1,14 @@
-var_info_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/'
-gwas_gzip_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/'
+# Path to project directory. The pipeline will create several subfolders here.
 global_project_dir: '/home/antton/Projects/Immune_GWAS/'
-raw_data_dir: '/home/antton/Projects/Immune_GWAS/data/raw/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/'
-intermediate_data_dir: '/home/antton/Projects/Immune_GWAS/data/intermediate/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/'
+
+# Path to 'variant info' file
+var_info_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/'
+
+# Path to gzipped GWAS output files. These will be first copied to the project folder and subsequently decompressed.
+gwas_gzip_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/'
+
+# Name of the GWAS run the data originates from. This name will be used to create subfolders in the project folder.
+name_of_gwas_run: 'BloodVariome_Taravero_preliminary_GWAS_2022-10-29'
+
+# P-value threshold to use for filtering GWAS results
 pval_thresh: 1e-6
