@@ -5,7 +5,8 @@ import polars as pl
 from scipy.stats import chi2
 import argparse
 
-"""This script takes a 'variant_info.txt' file and a number of GWAS output .rse files (ID, beta and chi-square columns).
+"""
+This script takes a 'variant_info.txt' file and a number of GWAS output .rse files (ID, beta and chi-square columns).
 It then filters the output tables by a user specified p-value threshold.
 The resulting entries, together with additional info about the variants, are written to a new file.
 """
@@ -53,7 +54,12 @@ for i, gwas_file in enumerate(os.listdir(args.files_filepath)):
         gwas_df = pl.read_csv(args.files_filepath + '/' + gwas_file, has_header=False,
                               new_columns=["ID", "beta", "chi2"], sep=" ")
         gwas_df = gwas_df.filter(gwas_df["chi2"] > chi2_threshold)
-        if gwas_df.is_empty():  # No need to continue if there are no hits  # TODO: make sure this works
+        if gwas_df.is_empty():  # If there are no hits, write an empty file to appease Snakemake # TODO: sure it works?
+            mock_df = pl.DataFrame(columns=["ID", "beta", "chi2", "pval", "Marker", "chromosome", "position", "OA",
+                                            "EA", "EAF", "Info", "phenotype"])
+            phenotype = '_'.join(
+                gwas_file.rstrip('.txt').split('_')[4:-3])  # Phenotype name is only given by the file name
+            mock_df.write_csv(args.output_filepath + '/' + phenotype + '.txt', sep='\t', has_header=True)
             continue
 
         # Add 'pval' column

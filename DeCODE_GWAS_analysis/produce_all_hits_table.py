@@ -39,6 +39,8 @@ for i, hit_table_file in enumerate(os.listdir(args.files_filepath)):
         table_df = pl.read_csv(args.files_filepath + '/' + hit_table_file, sep="\t",
                                columns=["ID", "beta", "chi2", "pval", "Marker", "chromosome", "position", "OA", "EA",
                                         "EAF", "Info", "phenotype"])
+        if table_df.is_empty():
+            continue
         full_hits_table_df = pl.concat([full_hits_table_df, table_df])
 
         if (num_all_tables > 100) & (i % 100 == 0):  # Print every 100 if # of files > 100 files, every 10 if < 100
