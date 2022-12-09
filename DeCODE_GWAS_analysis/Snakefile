@@ -45,6 +45,7 @@ pval_thresh_str = '10E' + pval_thresh_exponent
 phenotype_list = ['_'.join(gwas_file.rstrip('.txt').split('_')[4:-3]) for gwas_file in os.listdir(config['gwas_gzip_folder'])[:3]]
 print(phenotype_list)
 
+
 rule all:
     input:
         # Copied and gunzipped files. "raw" data.
@@ -104,3 +105,6 @@ rule generate_template_manhattan:
         intermediate_data_dir + 'template_manhattan.txt'
     shell:
         "python produce_full_sumstats_for_single_trait.py {input} -o {params.output_dir}"
+
+
+#rule generate_combined_manhattan:
