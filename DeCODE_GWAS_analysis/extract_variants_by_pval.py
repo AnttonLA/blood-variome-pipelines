@@ -23,7 +23,7 @@ parser.add_argument("-p", "--pval_thresh", default=6,
                          "threshold. E.g. 6 for p=1e-6. Only variants with p-values smaller than the corresponding "
                          "threshold will be included in the output tables. Default: 6")
 parser.add_argument("-o", "--output_filepath",
-                    help="Path to the directory where the output files will be written.")
+                    help="Path to the directory where the output files will be written to.")
 
 args = parser.parse_args()
 

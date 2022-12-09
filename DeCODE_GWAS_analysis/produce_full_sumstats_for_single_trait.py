@@ -20,9 +20,11 @@ parser.add_argument("files_filepath",
                     metavar="FOLDER_PATH",
                     help="Path to the directory containing the GWAS output files.")
 parser.add_argument("-o", "--output_filepath",
-                    help="Path to the directory where the output file will be written.")
+                    help="Path to the directory where the output file will be written to.")
 
 args = parser.parse_args()
+
+# TODO: Input validation
 
 # Read variant info file, then merge it with the GWAS output file
 var_info_df = pl.read_csv(args.variant_info_file, sep='\t', columns=["ID", "Marker", "OA", "EA", "EAF", "Info"])
