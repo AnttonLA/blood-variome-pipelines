@@ -55,7 +55,7 @@ rule all:
         # All hits table
         processed_data_dir + config['name_of_gwas_run'] +'_hits_only_' + pval_thresh_str + '_one_pheno_only_per_variant.txt',
         # Combined summary stats table for plotting
-        processed_data_dir + '/combined_manhattan.txt'
+        processed_data_dir + 'combined_manhattan.txt'
 
 
 # TODO: Copy the 'variant_info_extended.txt' file as well so that we don't need to read it from cbio3. Will need to change the config file too.
@@ -118,8 +118,8 @@ rule generate_combined_manhattan:
         intermediate_data_dir + 'template_manhattan.txt',
         processed_data_dir + config['name_of_gwas_run'] +'_hits_only_' + pval_thresh_str + '_one_pheno_only_per_variant.txt'
     params:
-        output_dir = intermediate_data_dir[:-1]
+        output_dir = processed_data_dir[:-1]
     output:
-        processed_data_dir + '/combined_manhattan.txt'
+        processed_data_dir + 'combined_manhattan.txt'
     shell:
         "python swap_in_hits_into_template_sumstats_file.py {input} -o {params.output_dir}"
