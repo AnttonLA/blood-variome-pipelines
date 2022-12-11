@@ -20,25 +20,26 @@ print("Welcome!\nSTEP 1: Reading files in the 'all_significant_variant_tables' f
 for i, file in enumerate(os.listdir(folder_path)):
     df = pl.read_csv(folder_path + file, sep="\t", columns=["pval", "chromosome", "position", "phenotype"])
     # Replace "chrX" with "chr23"
-    df = df.with_column(pl.when(pl.col("chromosome") == "chrX").then("chr23").otherwise(pl.col("chromosome")).alias("chromosome"))
+    df = df.with_column(
+        pl.when(pl.col("chromosome") == "chrX").then("chr23").otherwise(pl.col("chromosome")).alias("chromosome"))
     for row in df.rows():
         # ("pval", "chromosome", "position", "phenotype")
         if bed_df.is_empty():  # First entry
-             bed_df = pl.DataFrame({"chrom": [int(row[1][3:])],
-                                  "chromStart": [max(2, row[2]-10**6)],
-                                  "chromEnd": [row[2]+10**6],
-                                  "pval": [row[0]],
-                                  "phenotypes": [row[3]]})
+            bed_df = pl.DataFrame({"chrom": [int(row[1][3:])],
+                                   "chromStart": [max(2, row[2] - 10 ** 6)],
+                                   "chromEnd": [row[2] + 10 ** 6],
+                                   "pval": [row[0]],
+                                   "phenotypes": [row[3]]})
         else:
             bed_df = bed_df.extend(pl.DataFrame({"chrom": [int(row[1][3:])],
-                                                 "chromStart": [max(2, row[2]-10**6)],
-                                                 "chromEnd": [row[2]+10**6],
+                                                 "chromStart": [max(2, row[2] - 10 ** 6)],
+                                                 "chromEnd": [row[2] + 10 ** 6],
                                                  "pval": [row[0]],
                                                  "phenotypes": [row[3]]}))
     if not (i % 25):
-        percent = 100*(i/len(os.listdir(folder_path)))
-        print("#"*int(percent), f"({round(percent,2)}%)")
-    #if i >= 7:
+        percent = 100 * (i / len(os.listdir(folder_path)))
+        print("#" * int(percent), f"({round(percent, 2)}%)")
+    # if i >= 7:
     #    break
 
 bed_df = bed_df.sort([pl.col("chrom"), pl.col("chromStart")])
@@ -55,13 +56,15 @@ with open("variant_regions_step2.bed", "w") as f:
 collapsed_bed_df = pl.read_csv("variant_regions_step2.bed", sep="\t", columns=["chrom", "chromStart", "chromEnd",
                                                                                "pval", "phenotypes"])
 
-# Add a column with the numbers of phenotpyes with a significant p-value within that region.
-collapsed_bed_df.insert_at_idx(3, collapsed_bed_df.select("phenotypes").apply(lambda x: len(str(x).split(','))-1).to_series())
+# Add a column with the numbers of phenotypes with a significant p-value within that region.
+collapsed_bed_df.insert_at_idx(3, collapsed_bed_df.select("phenotypes").apply(
+    lambda x: len(str(x).split(',')) - 1).to_series())
 collapsed_bed_df = collapsed_bed_df.rename({"apply": "num_phenotypes"})
 
 print(collapsed_bed_df["pval"][0])
 # Add a column with the lowest pvalue for a variant in the region
-collapsed_bed_df.replace("pval", collapsed_bed_df.select("pval").apply(lambda x: "{:.2e}".format(min([float(i) for i in str(x[-1]).split(',')]) )).to_series() )
+collapsed_bed_df.replace("pval", collapsed_bed_df.select("pval").apply(
+    lambda x: "{:.2e}".format(min([float(i) for i in str(x[-1]).split(',')]))).to_series())
 collapsed_bed_df = collapsed_bed_df.rename({"pval": "lowest_pval"})
 
 output_file_name = "variant_regions_wPvals.bed"
