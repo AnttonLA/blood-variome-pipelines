@@ -54,6 +54,8 @@ rule all:
         expand(raw_data_dir + 'SWE_Swedes_Blood_variome_{phenotype}_adjSexPhaCohPC_InvNorm_12102022.res', phenotype=phenotype_list),
         # Individual hit tables per phenotype
         expand(intermediate_data_dir + 'hits_only_sumstats/{phenotype}.txt', phenotype=phenotype_list),
+        # Regions containing hits
+        processed_data_dir+ 'variant_regions.bed',
         # All hits table
         processed_data_dir + config['name_of_gwas_run'] +'_hits_only_' + pval_thresh_str + '_one_pheno_only_per_variant.txt',
         # Combined summary stats table for plotting
@@ -138,3 +140,15 @@ rule generate_manhattan_plot:
         processed_data_dir + 'manhattan_plot.png'
     shell:
         "chmod +x plot_manhattan.sh; ./plot_manhattan.sh {input} {params.output_dir}"
+
+
+rule generate_hit_regions_bed_file:
+    input:
+        expand(intermediate_data_dir + 'hits_only_sumstats/{phenotype}.txt', phenotype = phenotype_list)
+    params:
+        input_dir = intermediate_data_dir + 'hits_only_sumstats/',
+        output_dir = processed_data_dir[:-1]
+    output:
+        processed_data_dir + 'variant_regions.bed'
+    shell:
+        "python generate_hit_regions_bed.py {params.input_dir} -o {params.output_dir}"

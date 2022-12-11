@@ -11,7 +11,7 @@ gwas_data_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GW
 name_of_gwas_run: 'BloodVariome_Taravero_preliminary_GWAS_2022-10-29'
 
 # General type of the phenotype. E.g. 'Frequency_and_Ratio' or 'MFI'. This will be used to create sub-subfolders.
-trait_type: 'MFI'  # 'Frequency_and_Ratio'
+trait_type: 'MFI'  # Usually 'Frequency_and_Ratio' or 'MFI'
 
 # P-value threshold to use for filtering GWAS results
 pval_thresh: 1e-6

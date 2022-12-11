@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description="Make a BED file listing genomic re
 parser.add_argument("folder_path",
                     metavar="FOLDER_PATH",
                     help="Path to the directory containing the summary stats files that contain the GWAS hits.")
-parser.add_argument("-b", "--bedtools_path",
+parser.add_argument("-b", "--bedtools_path",  # TODO: IMPLEMENT THIS!
                     metavar="BEDTOOLS_PATH",
                     help="Path to the bedtools executable. If none is given, the script will assume that bedtools is "
                          "installed and available in the PATH.")
