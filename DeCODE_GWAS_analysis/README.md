@@ -16,7 +16,7 @@ However, it is recommended that you run the full pipeline as one. You can accomp
 ### About Snakemake
 Snakemake is a workflow management system that ensures the robustness and reproducibility of the analysis.
 In order to run the pipeline in your computer, you need to have Snakemake installed. You can install it through
-[Conda](https://docs.conda.io/en/latest/) with the following command:
+[Conda](https://docs.conda.io/en/latest/) with the following commands:
 
     conda config --add channels conda-forge
     conda config --add channels bioconda
