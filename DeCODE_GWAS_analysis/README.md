@@ -36,13 +36,16 @@ single trait.
 ### **produce_all_hits_table.py**
 This script takes the ´variant_info.txt´ file and the chi2 tables and produces a table with all hits for a single trait.
 
-**Note regarding "repeats":** The default option is to NOT take repeats, where the script will take only the one variant
-that is most significant for that position/ID. In this version of the table of hits, each row belongs to a distinct
-variant, showing the stats of the phenotype that had the lowest p-value for that SNP. If the option to keep the repeats
-is selected instead, there will be a separate entry for the same variant for each of the different phenotypes where the
-variant has a significant association.  
-
+**Note regarding "repeats":** The default option is to NOT take repeats, meaning the script will take only the trait
+that is most significant for each unique position/ID. In this version of the output table of hits, each row belongs to a
+distinct variant, showing the stats of the phenotype that had the lowest p-value for that SNP. If the option to keep the
+repeats is selected instead, there will be a separate entry for the same variant for each of the different phenotypes
+where the variant has a significant association.  
 
 ### **swap_in_hits_into_template_sumstats_file.py**
 This script takes a template summary statistics file and a table of hits and swaps in the hits into the template file.
 
+### **plot_manhattan.sh**
+This script takes a summary statistics file and plots a Manhattan plot for it using
+[manhattan_maker](https://github.com/AnttonLA/manhattan_maker). You will need manhattan_maker installed in your
+computer to use it.
