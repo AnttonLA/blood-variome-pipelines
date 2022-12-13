@@ -43,9 +43,9 @@ if args.alias_file:
                 alias_dict[split_line[0].replace(' ', '')] = "Other"
             else:
                 raise ValueError('The alias file is not formatted correctly. Each line must have 2 entries max.')
-
+    print(f"Using provided alias file {args.alias_file} to assign aliases to the traits.")
     # add column 'alias' to the hits_df dataframe using the alias_dict to map the values
-    hits_df = hits_df.with_columns((pl.col('phenotype').apply(lambda x: alias_dict[x])).alias('alias'))
+    hits_df = hits_df.with_columns((pl.col('phenotype').apply(lambda x: alias_dict[x] if x in alias_dict.keys() else "Other")).alias('alias'))
 
 else:
     hits_df = hits_df.with_columns((pl.col('phenotype')).alias('alias'))  # If no alias file, just repeat the phenotype
@@ -53,11 +53,11 @@ else:
 template_df = pl.read_csv(args.template_file, sep="\t",
                           columns=["ID", "beta", "chi2", "pval", "Marker", "chromosome", "position", "OA", "EA",
                                    "EAF", "Info", "phenotype"])
-template_df = template_df.with_columns((pl.col('phenotype')).alias('alias'))  # Add the alias column to the template_df
+#template_df = template_df.with_columns((pl.col('phenotype')).alias('alias'))  # Add the alias column to the template_df
+template_df = template_df.with_columns(pl.lit("NA").alias('alias'))  # Add the alias column to the template_df
 
 # Replace the relevant entries in the templateGWAS_df dataframe with the contents of the hits_df dataframe
 out_df = pl.concat([template_df, hits_df])
-# TODO: Ensure that the merge is working correctly. This is the most important step.
 
 # Sort the created sumstats by chromosome and position before writing to file
 # If chromosome names start with 'chr', remove it before sorting
