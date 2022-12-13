@@ -45,7 +45,7 @@ if args.alias_file:
                 raise ValueError('The alias file is not formatted correctly. Each line must have 2 entries max.')
     print(f"Using provided alias file {args.alias_file} to assign aliases to the traits.")
     # add column 'alias' to the hits_df dataframe using the alias_dict to map the values
-    hits_df = hits_df.with_columns((pl.col('phenotype').apply(lambda x: alias_dict[x] if x in alias_dict.keys() else "Other")).alias('alias'))
+    hits_df = hits_df.with_columns((pl.col('phenotype').apply(lambda x: alias_dict[x] if x in alias_dict.keys() else "<no data>")).alias('alias'))
 
 else:
     hits_df = hits_df.with_columns((pl.col('phenotype')).alias('alias'))  # If no alias file, just repeat the phenotype

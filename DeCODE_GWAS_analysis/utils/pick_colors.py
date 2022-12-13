@@ -19,7 +19,7 @@ parser.add_argument('num_colors', type=int, help='the number of colors to genera
 args = parser.parse_args()
 
 # Generate the color palette using the matplotlib colormap
-colors = cm.get_cmap('twilight', args.num_colors)
+colors = cm.get_cmap('tab10', args.num_colors)
 
 
 def rgba_to_hex(rgba: tuple) -> str:

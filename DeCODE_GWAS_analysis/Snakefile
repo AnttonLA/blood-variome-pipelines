@@ -124,11 +124,12 @@ rule generate_combined_sumstats_file:
         intermediate_data_dir + 'template_manhattan.txt',
         processed_data_dir + config['name_of_gwas_run'] +'_hits_only_' + pval_thresh_str + '_one_pheno_only_per_variant.txt'
     params:
+        alias_file = config['alias_file'],
         output_dir = processed_data_dir[:-1]
     output:
         processed_data_dir + 'combined_manhattan.txt'
     shell:
-        "python swap_in_hits_into_template_sumstats_file.py {input} -o {params.output_dir}"
+        "python swap_in_hits_into_template_sumstats_file.py {input} -a {params.alias_file} -o {params.output_dir}"
 
 
 rule generate_manhattan_plot:
