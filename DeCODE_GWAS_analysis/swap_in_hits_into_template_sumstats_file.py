@@ -53,8 +53,9 @@ else:
 template_df = pl.read_csv(args.template_file, sep="\t",
                           columns=["ID", "beta", "chi2", "pval", "Marker", "chromosome", "position", "OA", "EA",
                                    "EAF", "Info", "phenotype"])
-#template_df = template_df.with_columns((pl.col('phenotype')).alias('alias'))  # Add the alias column to the template_df
-template_df = template_df.with_columns(pl.lit("NA").alias('alias'))  # Add the alias column to the template_df
+
+# Add the alias column to the template_df. We fill it with '<no data>' so that manhattan_maker will ignore them later
+template_df = template_df.with_columns(pl.lit("<no data>").alias('alias'))
 
 # Replace the relevant entries in the templateGWAS_df dataframe with the contents of the hits_df dataframe
 out_df = pl.concat([template_df, hits_df])
