@@ -22,7 +22,12 @@ In order to run the pipeline in your computer, you need to have Snakemake instal
     conda config --add channels bioconda
     conda install snakemake
 
-You will also need to update the ´config.yaml´ file with the paths to the files you want to use.
+You will also need to update the [config.yaml](config.yaml) file with the paths to the files you want to use.
+
+Once you have updated the congig.yaml file so that it points to the correct files and directories, you can run the
+pipeline with the following command:
+
+    snakemake --cores 4
 
 ## Scripts
 ### **extract_variants_by_pval.py**
@@ -47,5 +52,8 @@ This script takes a template summary statistics file and a table of hits and swa
 
 ### **plot_manhattan.sh**
 This script takes a summary statistics file and plots a Manhattan plot for it using
-[manhattan_maker](https://github.com/AnttonLA/manhattan_maker). You will need manhattan_maker installed in your
+[manhattan_maker](https://github.com/AnttonLA/manhattan_maker). You will need manhattan_maker installed on your
 computer to use it.
+
+### **generate_hit_regions_bed.py**
+This script is used to generate a .bed file that contains the regions where at least one GWAS hit is present.

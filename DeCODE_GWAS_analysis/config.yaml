@@ -11,10 +11,19 @@ gwas_data_folder: '/media/antton/cbio3/data/BloodVariome_Taravero_preliminary_GW
 name_of_gwas_run: 'BloodVariome_Taravero_preliminary_GWAS_2022-10-29'
 
 # General type of the phenotype. E.g. 'Frequency_and_Ratio' or 'MFI'. This will be used to create sub-subfolders.
-trait_type: 'MFI'  # Usually 'Frequency_and_Ratio' or 'MFI'
+trait_type: 'Frequency_and_Ratio'  # Usually 'Frequency_and_Ratio' or 'MFI'
 
 # P-value threshold to use for filtering GWAS results
 pval_thresh: 1e-6
 
 # Alias dictionary for GWAS traits. This will be used to group or rename traits in the GWAS results for plotting.
 alias_file: '/home/antton/Projects/Immune_GWAS/data/processed/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/phenotype_lineage_map.csv'
+
+# Path to bedtools. It is used to generate the BED file describing regions where the GWAS hits are located.
+bedtools_path: '/home/antton/Programs/bedtools2/bin/bedtools'
+
+# Path to Tabix. It is used to look for the closest gene to the GWAS hits.
+tabix_path: '/usr/local/bin/tabix'
+
+# Genecode annotation file. It needs to be Tabix indexed (the file in cbio already is). Used to look up closest genes.
+gencode_path: '/media/antton/cbio3/data/GENCODE/gencode.v42.basic.annotation.sorted.gtf.gz'

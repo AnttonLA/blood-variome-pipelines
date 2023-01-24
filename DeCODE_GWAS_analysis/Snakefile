@@ -148,8 +148,12 @@ rule generate_hit_regions_bed_file:
         expand(intermediate_data_dir + 'hits_only_sumstats/{phenotype}.txt', phenotype = phenotype_list)
     params:
         input_dir = intermediate_data_dir + 'hits_only_sumstats/',
+        bedtools = config['bedtools_path'],
+        tabix = config['tabix_path'],
+        gencode = config['gencode_path'],
         output_dir = processed_data_dir[:-1]
     output:
         processed_data_dir + 'variant_regions.bed'
     shell:
-        "python generate_hit_regions_bed.py {params.input_dir} -o {params.output_dir}"
+        "python generate_hit_regions_bed.py {params.input_dir} -b {params.bedtools} -t {params.tabix}"
+        " -g {params.gencode} -o {params.output_dir}"
