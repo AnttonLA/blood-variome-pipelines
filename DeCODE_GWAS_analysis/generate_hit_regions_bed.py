@@ -19,7 +19,13 @@ parser = argparse.ArgumentParser(description="Make a BED file listing genomic re
 parser.add_argument("folder_path",
                     metavar="FOLDER_PATH",
                     help="Path to the directory containing the summary stats files that contain the GWAS hits.")
-parser.add_argument("-b", "--bedtools_path",  # TODO: IMPLEMENT THIS!
+parser.add_argument("-s", "--interval_size",
+                    metavar="INTERVAL_SIZE",
+                    type=int,
+                    default=1000000,
+                    help="Size of the intervals in which the hits will be grouped. Default is 1000000 (1Mb) up and down"
+                            " stream from each variant.")
+parser.add_argument("-b", "--bedtools_path",
                     metavar="BEDTOOLS_PATH",
                     help="Path to the bedtools executable. If none is given, the script will assume that bedtools is "
                          "installed and available in the PATH.")
@@ -65,8 +71,8 @@ for i, file in enumerate(os.listdir(args.folder_path)):
     for row in df.rows():
         # row is a tuple(?) with this shape: ("pval", "chromosome", "position", "phenotype")
         bed_df = bed_df.extend(pl.DataFrame({"chrom": [int(row[1])],
-                                             "chromStart": [max(2, row[2] - 10 ** 6)],
-                                             "chromEnd": [row[2] + 10 ** 6],
+                                             "chromStart": [max(2, row[2] - args.interval_size)],
+                                             "chromEnd": [row[2] + args.interval_size],
                                              "leadSnp_pos": [row[2]],
                                              "leadSnp_pval": [row[0]],
                                              "phenotypes": [row[3]]}))
