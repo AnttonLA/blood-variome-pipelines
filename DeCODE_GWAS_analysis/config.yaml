@@ -16,6 +16,9 @@ trait_type: 'Frequency_and_Ratio'  # Usually 'Frequency_and_Ratio' or 'MFI'
 # P-value threshold to use for filtering GWAS results
 pval_thresh: 1e-6
 
+# Distance (in bps) used to merge hits into regions. Variants withing this distance will be merged into the same region.
+window_buffer: 500000  # Default used to be 1000000 (1Mb) but it might be too permissive.
+
 # Alias dictionary for GWAS traits. This will be used to group or rename traits in the GWAS results for plotting.
 alias_file: '/home/antton/Projects/Immune_GWAS/data/processed/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/phenotype_lineage_map.csv'
 

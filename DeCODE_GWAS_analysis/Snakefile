@@ -150,6 +150,7 @@ rule generate_hit_regions_bed_file:
         expand(intermediate_data_dir + 'hits_only_sumstats/{phenotype}.txt', phenotype = phenotype_list)
     params:
         input_dir = intermediate_data_dir + 'hits_only_sumstats/',
+        window_buffer = config['window_buffer'],
         bedtools = config['bedtools_path'],
         tabix = config['tabix_path'],
         gencode = config['gencode_path'],
@@ -157,17 +158,36 @@ rule generate_hit_regions_bed_file:
     output:
         processed_data_dir + 'variant_regions.bed'
     shell:
-        "python generate_hit_regions_bed.py {params.input_dir} -b {params.bedtools} -t {params.tabix}"
-        " -g {params.gencode} -o {params.output_dir}"
+        "python generate_hit_regions_bed.py {params.input_dir} --interval_size {params.window_buffer}"
+        " -b {params.bedtools} -t {params.tabix} -g {params.gencode} -o {params.output_dir}"
 
 
-# TODO: This rule doesn't check the files, but the directory. This means there is no guarantee the files are there.
+def get_variant_region_output_file_names(variant_regions_bed_file):
+    # TODO: if file does not exist prior to run this function doesn't really work. Need a solution for this.
+    if not os.path.exists(variant_regions_bed_file):  # Check that the file exists
+        return []
+    output_file_names = []
+    with open(variant_regions_bed_file, 'r') as f:
+        for i, line in enumerate(f):
+            line = line.strip()
+            if line.startswith('chrom'):  # Skip header
+                continue
+            line = line.split('\t')
+            region_chrom = line[1]
+            region_start = line[2]
+            region_end = line[3]
+            filename = f"region_{i}_chr{region_chrom}:{region_start}-{region_end}.bed"
+            output_file_names.append(filename)
+    return output_file_names
+
+
 rule generate_individual_region_bed_files:
     input:
         processed_data_dir + 'variant_regions.bed'
     params:
         hit_bed_files_folder = intermediate_data_dir  + 'hits_only_sumstats/',
     output:
-        directory(processed_data_dir + 'variant_regions/')
+        directory(processed_data_dir + 'variant_regions/'),
+        expand(processed_data_dir + 'variant_regions/{filename}', filename=get_variant_region_output_file_names(processed_data_dir + 'variant_regions.bed'))
     shell:
         "python generate_individual_region_beds.py --regions_file {input} --hits_bed_files_folder {params.hit_bed_files_folder} --output_folder {output}"
