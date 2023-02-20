@@ -6,19 +6,27 @@ import argparse
 This script will go through a BED-like file specifying the regions in the genome where we have GWAS hits, and will check
 all of the GWAS hits in the hits_only_sumstats folder for hits within that region. It will then output a BED file for
 each of the regions with positions, effect alleles, p-values and phenotypes of the hits within that region.
+
+Usage: python generate_individual_region_beds.py --regions_file /path/to/variant_regions.bed --hits_bed_files_folder 
+/path/to/hits_only_sumstats/ --output_folder /path/to/output_folder/
 """
 
 parser = argparse.ArgumentParser(description="Make a BED file for each of the regions specified in the"
                                              "'variant_regions.bed' file. Each file will contain the positions, effect"
-                                             "alleles, p-values and phenotypes of the hits within that region.")
+                                             " alleles, p-values and phenotypes of the hits within that region. "
+                                             "Optionally, create .gwas files instead of BED files for display in IGV.")
 parser.add_argument("--regions_file", type=str, required=True,
                     help="Path to the BED-like file containing the regions in the genome where we have GWAS hits.")
 parser.add_argument("--hits_bed_files_folder", type=str, required=True,
                     help="Path to the folder containing the GWAS hit tables.")
+parser.add_argument("--dot_gwas_file", default=False, action="store_true",
+                    help="Use this flag if instead of a BED file we want to produce an IGV-compatible .gwas file. See "
+                         "https://software.broadinstitute.org/software/igv/GWAS for details.")
 parser.add_argument("--output_folder", type=str, required=True,
                     help="Path to the folder where the output files will be written to.")
 
 args = parser.parse_args()
+
 
 # Check if the paths are valid
 if not os.path.exists(args.regions_file):
@@ -34,6 +42,12 @@ if args.hits_bed_files_folder[-1] != "/":
     args.hits_bed_files_folder += "/"
 if args.output_folder[-1] != "/":
     args.output_folder += "/"
+
+# Output file extension
+if args.dot_gwas_file:
+    file_extension = ".gwas"
+else:
+    file_extension = ".bed"
 
 # Load regions file
 df = pl.read_csv(args.regions_file, sep='\t', columns=["chrom", "chromStart", "chromEnd", "phenotypes"])
@@ -65,5 +79,9 @@ for region_number in range(len(df)):
         hits_bed_df = hits_bed_df.filter(hits_bed_df["position"] <= df[region_number, 2])
 
         final_df = pl.concat([final_df, hits_bed_df])
-    final_df.write_csv(args.output_folder + f"region_{region_number+1}_chr{region_chrom}:{region_start}-{region_end}.bed",
+
+    if not args.dot_gwas_file:  # Default output is a BED file, which has ChromStart and ChromEnd columns.
+        final_df = final_df.insert_at_idx(2, final_df.to_series(1).alias("position2"))  # Add position2 (ChromEnd) col
+
+    final_df.write_csv(args.output_folder + f"region_{region_number+1}_chr{region_chrom}:{region_start}-{region_end}{file_extension}",
                        sep='\t', has_header=True)
