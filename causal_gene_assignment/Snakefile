@@ -28,10 +28,14 @@ processed_data_dir = config['global_project_dir'] + 'data/processed/' + config['
 rule all:
     input:
         intermediate_data_dir + 'variant_list.gor',
-        processed_data_dir + 'eqtl_test.gor'
+        processed_data_dir + 'eqtl_test_2.gor'
 
 
 rule convert_variant_list_to_gor:
+    """ 
+    Convert the variant list file to .gor format. This is the list containing our GWAS variants that we want to assign
+    genes to. 
+    """
     input:
         config['variant_file']
     output:
@@ -40,13 +44,24 @@ rule convert_variant_list_to_gor:
         "python convert_to_gor.py {input} --chr_col chromosome --pos_col position --additional_cols 'OA, EA, EAF, beta, pval, Marker, phenotype' -o {output}"
 
 
-rule check_eqtl_test:
+rule immunexut_lookup:
+    """
+    Look up our variants in the ImmuNexUT database. If any of them have eQTLs for any cell type in the database, we will
+    record them in the output file.
+    """
     input:
         intermediate_data_dir + 'variant_list.gor'
     params:
-        test_eqtl = "/home/antton/Tiny_Projects/GORpipe_data_formatting/data/sorted_CL_Mono_conditional_eQTL_FDR0.05.gorz"
+        immunexut = config["immunexut_dir"] + "combined_immunexut.gorz"
     output:
-        processed_data_dir + 'eqtl_test.gor'
+        processed_data_dir + 'eqtl_test_2.gor'
     shell:
-        config['gorpipe_path'] + " 'gor {input} | SORT genome | VARJOIN /home/antton/Tiny_Projects/GORpipe_data_formatting/combined_immunexut.gorz\
-         -refl OA -altl EA -refr OA -altr EA | write {output}'"
+        config['gorpipe_path'] + " 'gor {input} | SORT genome \
+        | VARJOIN {params.immunexut} -refl OA -altl EA -refr OA -altr EA \
+        | SELECT #Chrom,Pos,Variant_position_end,OA,EA,EAF,beta,pval,Marker,phenotype,Gene_name,Forward_nominal_P,Source \
+        | RENAME Gene_name immunexut_gene | RENAME Forward_nominal_P immunexut_pval | RENAME Source immunexut_celltype\
+        | write {output}'"
+
+
+#rule eqtl_catalogue_lookup:
+#    input:

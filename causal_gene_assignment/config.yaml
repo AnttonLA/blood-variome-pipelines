@@ -14,4 +14,4 @@ variant_file: '/home/antton/Projects/Immune_GWAS/data/processed/BloodVariome_Tar
 gencode_path: '/media/antton/cbio3/data/GENCODE/gencode.v42.basic.annotation.sorted.gtf.gz'
 
 # Path to the directory containing ImmunexUT eQTL data in .gorz format.
-immunexut_dir: '/media/antton/cbio3/data/ImmunexUT/gorz_format/'
+immunexut_dir: '/media/antton/cbio3/data/ImmunexUT/'
