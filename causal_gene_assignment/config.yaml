@@ -1,0 +1,17 @@
+# Path to project directory. The pipeline will create several subfolders here.
+global_project_dir: '/home/antton/Projects/Immune_GWAS/'
+
+# Name of the subfolders within the raw, interim and processed directories.
+name_of_run: 'Closest_gene_assignment_test'
+
+# Path to gorpipe. This is the path to the gorpipe executable.
+gorpipe_path: '/home/antton/Programs/gorscripts-3.21.0-dist/bin/gorpipe'
+
+# Path to the file containing all the variants we want to assign a causal gene to. It must contain chrom and pos (hg38).
+variant_file: '/home/antton/Projects/Immune_GWAS/data/processed/BloodVariome_Taravero_preliminary_GWAS_2022-10-29/Frequency_and_Ratio/BloodVariome_Taravero_preliminary_GWAS_2022-10-29_hits_only_10E8.0_one_pheno_only_per_variant.txt'
+
+# Genecode annotation file. It needs to be Tabix indexed (the file in cbio already is). Used to look up closest genes.
+gencode_path: '/media/antton/cbio3/data/GENCODE/gencode.v42.basic.annotation.sorted.gtf.gz'
+
+# Path to the directory containing ImmunexUT eQTL data in .gorz format.
+immunexut_dir: '/media/antton/cbio3/data/ImmunexUT/gorz_format/'

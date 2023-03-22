@@ -1,0 +1,52 @@
+import os
+
+configfile: "config.yaml"
+
+# Initialize directory structure
+if 'data' not in os.listdir(config['global_project_dir']):
+    os.mkdir(config['global_project_dir'] + '/data')
+if 'raw' not in os.listdir(config['global_project_dir'] + '/data'):
+    os.mkdir(config['global_project_dir'] + '/data/raw')
+if 'intermediate' not in os.listdir(config['global_project_dir'] + '/data'):
+    os.mkdir(config['global_project_dir'] + '/data/intermediate')
+if 'processed' not in os.listdir(config['global_project_dir'] + '/data'):
+    os.mkdir(config['global_project_dir'] + '/data/processed')
+
+# Create run-specific directories
+if config['name_of_run'] not in os.listdir(config['global_project_dir'] + '/data/raw'):
+    os.mkdir(config['global_project_dir'] + '/data/raw/' + config['name_of_run'])
+if config['name_of_run'] not in os.listdir(config['global_project_dir'] + '/data/intermediate'):
+    os.mkdir(config['global_project_dir'] + '/data/intermediate/' + config['name_of_run'])
+if config['name_of_run'] not in os.listdir(config['global_project_dir'] + '/data/processed'):
+    os.mkdir(config['global_project_dir'] + '/data/processed/' + config['name_of_run'])
+
+# Global path variables
+raw_data_dir = config['global_project_dir'] + 'data/raw/' + config['name_of_run'] + '/'
+intermediate_data_dir = config['global_project_dir'] + 'data/intermediate/' + config['name_of_run'] + '/'
+processed_data_dir = config['global_project_dir'] + 'data/processed/' + config['name_of_run'] + '/'
+
+rule all:
+    input:
+        intermediate_data_dir + 'variant_list.gor',
+        processed_data_dir + 'eqtl_test.gor'
+
+
+rule convert_variant_list_to_gor:
+    input:
+        config['variant_file']
+    output:
+        intermediate_data_dir + 'variant_list.gor'
+    shell:
+        "python convert_to_gor.py {input} --chr_col chromosome --pos_col position --additional_cols 'OA, EA, EAF, beta, pval, Marker, phenotype' -o {output}"
+
+
+rule check_eqtl_test:
+    input:
+        intermediate_data_dir + 'variant_list.gor'
+    params:
+        test_eqtl = "/home/antton/Tiny_Projects/GORpipe_data_formatting/data/sorted_CL_Mono_conditional_eQTL_FDR0.05.gorz"
+    output:
+        processed_data_dir + 'eqtl_test.gor'
+    shell:
+        config['gorpipe_path'] + " 'gor {input} | SORT genome | VARJOIN /home/antton/Tiny_Projects/GORpipe_data_formatting/combined_immunexut.gorz\
+         -refl OA -altl EA -refr OA -altr EA | write {output}'"
