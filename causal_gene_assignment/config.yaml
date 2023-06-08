@@ -15,3 +15,6 @@ gencode_path: '/media/antton/cbio3/data/GENCODE/gencode.v42.basic.annotation.sor
 
 # Path to the directory containing ImmunexUT eQTL data in .gorz format.
 immunexut_dir: '/media/antton/cbio3/data/ImmunexUT/'
+
+# Path to the directory containing eQTL Catalogue data in .gorz format.
+eqtl_catalogue_dir: '/media/antton/cbio3/data/eQTL_DB/GORpipe/'

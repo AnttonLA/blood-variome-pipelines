@@ -28,12 +28,13 @@ processed_data_dir = config['global_project_dir'] + 'data/processed/' + config['
 rule all:
     input:
         intermediate_data_dir + 'variant_list.gor',
-        processed_data_dir + 'eqtl_test_2.gor'
+        processed_data_dir + 'eqtl_test_2.gor',
+        processed_data_dir+ 'eqtl_test_3.gor'
 
 
 rule convert_variant_list_to_gor:
     """ 
-    Convert the variant list file to .gor format. This is the list containing our GWAS variants that we want to assign
+    Convert the variant list file to .gor format. This is thle list containing our GWAS variants that we want to assign
     genes to. 
     """
     input:
@@ -63,5 +64,16 @@ rule immunexut_lookup:
         | write {output}'"
 
 
-#rule eqtl_catalogue_lookup:
-#    input:
+rule eqtl_catalogue_lookup:
+    input:
+        processed_data_dir+ 'eqtl_test_2.gor'
+    params:
+        eqtl_catalogue = config['eqtl_catalogue_dir'] + "combined_eqtl_catalogue.gorz"
+    output:
+        processed_data_dir + 'eqtl_test_3.gor'
+    shell:
+        config['gorpipe_path'] + " 'gor {input} | SORT genome \
+        | VARJOIN {params.eqtl_catalogue} -refl OA -altl EA -refr ref -altr alt \
+        | SELECT #Chrom,Pos,Variant_position_end,OA,EA,EAF,beta,pval,Marker,phenotype,immunexut_gene,immunexut_pval,\
+immunexut_celltype,eqtlcat_gene,Source | RENAME Source eqtlcat_celltype \
+        | write {output}'"

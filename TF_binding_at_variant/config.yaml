@@ -1,0 +1,11 @@
+
+variant_file: "data/rs201494641.txt"  # File with the variant to be tested.
+# It should be a tab-separated file with the following columns: ID, Chrom, Pos, OA, EA
+
+remap_data_file: "data/remap2022_all_macs2_hg38_v1_0.bed.gz"  # Remember it needs to be bgzipped and tabix indexed!
+
+remap_output_file: "output/remapdb_studies.csv"  # Output file with the studies with TFs that overlap the variant
+
+hg38_fa_file: "/media/antton/cbio3/projects/Zain_2021/hg38FASTA/hg38.fa"  # hg38 reference genome fasta file
+
+perfectos_ape_output_file: "output/perfectos_ape_output.txt"  # Output file with the perfectos ape results

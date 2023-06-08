@@ -1,0 +1,39 @@
+# Define config file
+configfile: "config.yaml"
+
+# Rule to generate the output file(s)
+rule all:
+    input:
+        config["remap_output_file"],
+        config["perfectos_ape_output_file"]
+
+
+# Extract the entries relevant to our variant from the ReMap database
+rule extract_remap_entries:
+    input:
+        config["variant_file"]
+    params:
+        remap_file = config["remap_data_file"]
+    output:
+        config["remap_output_file"]
+    shell:
+        "python extract_remapdb_studies.py $(./extract_chrom_pos.sh {input}) -r {params.remap_file} -o {output}"
+
+
+# Get all the TF motifs broken by the variant
+rule perfectos_ape_lookup:
+    input:
+        config["variant_file"]
+    params:
+        hg38_fa = config["hg38_fa_file"],
+        hocmomoco = "perfectos_ape//pwm/hocomoco_11_human",
+        samtools = "/home/antton/Programs/samtools-1.17/samtools"
+    output:
+        config["perfectos_ape_output_file"]
+    shell:
+        "python perfectos_ape/run_perfectos_hocomoco.py \
+        --snplist {input} \
+        --ref {params.hg38_fa} \
+        --hocomoco {params.hocmomoco} \
+        --samtools {params.samtools} \
+        -o {output}"
