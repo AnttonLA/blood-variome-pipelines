@@ -52,7 +52,8 @@ rule perfectos_ape_lookup:
     params:
         hg38_fa = config["hg38_fa_file"],
         hocmomoco = "perfectos_ape/pwm/hocomoco_11_human",
-        samtools = "/home/antton/Programs/samtools-1.17/samtools"
+        samtools = "/home/antton/Programs/samtools-1.17/samtools",
+        temp_dir = config["tmp_folder"]
     output:
         config["perfectos_ape_output_file"]
     shell:
@@ -61,4 +62,5 @@ rule perfectos_ape_lookup:
         --ref {params.hg38_fa} \
         --hocomoco {params.hocmomoco} \
         --samtools {params.samtools} \
+        --temp_dir {params.temp_dir} \
         -o {output}"

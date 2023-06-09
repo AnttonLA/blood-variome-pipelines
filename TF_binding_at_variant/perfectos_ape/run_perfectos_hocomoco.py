@@ -13,7 +13,8 @@ import os
 import argparse
 
 
-def create_hocomocco_input_file(snplist: str, hg38fa: str, samtools: str, verbose: bool = False) -> None:
+def create_hocomoco_input_file(snplist: str, hg38fa: str, samtools: str, output_dir: str,
+                                verbose: bool = False) -> None:
     """Parse input file and extract chromosome, position. Then expand every position to a total of 60 bp with the SNP
     in the middle. The SNP itself is written in brackets (e.g. [A/T]). The output is written to a tmp file and later
     used as input for the ape.jar. Indels are ignored and saved to a separate list that is outputted at the end.
@@ -21,6 +22,7 @@ def create_hocomocco_input_file(snplist: str, hg38fa: str, samtools: str, verbos
     :param snplist: Path to the snplist file
     :param hg38fa: Path to the hg38 fasta file
     :param samtools: Path to the samtools executable
+    :param output_dir: Path to the output directory where the hocomoco input file and the indel file will be written
     :param verbose: If True, print more information to stdout/stderr
     :return:
     """
@@ -29,13 +31,14 @@ def create_hocomocco_input_file(snplist: str, hg38fa: str, samtools: str, verbos
         raise ValueError("SNP list file does not exist")
     if not os.path.isfile(hg38fa):
         raise ValueError("hg38 fasta file does not exist")
+    if not os.path.isdir(output_dir):
+        raise ValueError("Output directory does not exist")
 
     # Iterate through snplist file and create temporary file with input for ape.jar for each SNP.
     # Indels are stored in another temp file, but nothing is done with them.
     indels = []
     with open(snplist, "r") as snp_file:
-        script_dir = os.path.dirname(os.path.realpath(__file__))
-        with open(f"{script_dir}/tmp/tmp.txt", "w") as tmp_file:
+        with open(f"{output_dir}/tmp.txt", "w") as tmp_file:
             # Skip header
             next(snp_file)
             i = 0
@@ -81,7 +84,7 @@ def create_hocomocco_input_file(snplist: str, hg38fa: str, samtools: str, verbos
                 tmp_file.write(perfectos_ape_input_line)
 
         # Write indels to a separate file
-        with open(f"{script_dir}/tmp/indels.txt", "w") as indel_file:
+        with open(f"{output_dir}/indels.txt", "w") as indel_file:
             for indel in indels:
                 indel_file.write(indel + "\n")
 
@@ -99,6 +102,8 @@ if __name__ == "__main__":
                         help="Path to hocomoco database (default: %(default)s)")
     parser.add_argument("-v", "--verbose", required=False, action="store_true",
                         help="Print more information to stdout/stderr")
+    parser.add_argument("-t", "--temp_dir", required=False, default="./tmp",
+                        help="Path to temp directory, where intermediate files will be stored (default: %(default)s)")
     parser.add_argument("-o", "--output", required=False, default="./results/results.txt",
                         help="Path to output file. (default: %(default)s)")
 
@@ -115,15 +120,16 @@ if __name__ == "__main__":
     hocomoco_db = args["hocomoco"]
     hg38fa = args["ref"]  # Path to the hg38 reference genome fasta file
     samtools = args["samtools"]
+    tmp_dir = args["temp_dir"]
 
     # Pull out ref sequences from reference fasta file and create a PERFECTOS-APE input file
-    create_hocomocco_input_file(snplist, hg38fa, samtools)
+    create_hocomoco_input_file(snplist, hg38fa, samtools, tmp_dir, args["verbose"])
 
     sys.stdout.write(f"Created perfectos-ape input file, running PERFECTOS-APE... (this may take a while)\n"
                      f"Output will be continuously written to {args['output']}\n")
 
     # Call the perfectos-ape java ape.jar with the given snplist
     # Catch standard output and redirect it to a results file
-    os.system(f"java -jar {ape_jar} {hocomoco_db} {script_dir}/tmp/tmp.txt > {args['output']}")
+    os.system(f"java -jar {ape_jar} {hocomoco_db} {tmp_dir}/tmp.txt > {args['output']}")
 
     sys.stdout.write("Done!\n")
