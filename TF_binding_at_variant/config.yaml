@@ -1,7 +1,7 @@
 
 ## INPUT FILES ##
 
-# List of variant(s) to be tested
+# List of variant(s) to be tested. A.k.a. the "snplist".
 # It should be a tab-separated file with the following columns: ID, Chrom, Pos, OA, EA
 variant_file: "/home/antton/Projects/IgGWAS/transcription_factors/data/test_snplist.txt"
 
@@ -15,7 +15,7 @@ hg38_fa_file: "/media/antton/cbio3/projects/Zain_2021/hg38FASTA/hg38.fa"
 ## OUTPUT FILES ##
 
 # CSV file with the studies with TFs that overlap the variant
-remap_output_file: "/home/antton/Projects/IgGWAS/transcription_factors/output/remapdb_studies.csv"
+remap_output_dir: "/home/antton/Projects/IgGWAS/transcription_factors/tmp/remap_lookup_outputs/"
 
 # Output file with the perfectos ape results
 perfectos_ape_output_file: "/home/antton/Projects/IgGWAS/transcription_factors/output/perfectos_ape_output.txt"

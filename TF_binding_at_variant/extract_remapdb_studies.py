@@ -4,18 +4,19 @@ import argparse
 import sys
 
 
-def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, output: str) -> None:
+def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, output: str, verbose: bool = False) -> None:
     """
     This function will take the position of a SNP ('chr_pos') and produce a tabix query to the ReMap metadata file
     (filepath stored in 'remap_file'). It will then process the output of the tabix query to produce a table with the
     following columns: study_accession | transcription_factor | biotype | distance_to_snp. The table will be written to
-    a CSV file (filepath stored in 'output').
+    a text file (filepath stored in 'output').
 
     :param chr_pos: Position of the SNP in the format <chr>:<pos>
     :param remap_file: Path to ReMap BED file. Requires tabix index file.
-    :param tmp_dir: Directory to store temporary files. If none is specified, temporary files will be stored in the
-    current working directory.
-    :param output: Output file. Must be a CSV file.
+    :param tmp_dir: Directory to store temporary files (i.e. tabix "slices" of the remap metadata file for the queried
+     position). If none is specified, temporary files will be stored in the current working directory.
+    :param output: Output file.
+    :param verbose: If True, print progress to stdout.
     :return: None
     """
 
@@ -31,7 +32,8 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     pos = chr_pos.split(":")[1]  # Position of the SNP
     snp_full_pos = f"chr{chrom}:{pos}-{pos}"  # Full position of SNP in 'chr<chrom>:<pos>-<pos>' format, for tabix query
 
-    sys.stdout.write(f"Requested position: <{snp_full_pos}>\n")
+    if verbose:
+        sys.stdout.write(f"Requested position: <{snp_full_pos}>\n")
 
     # Check if ReMap file exists, it is bgzipped, and it has a tabix index file
     if not os.path.isfile(remap_file):
@@ -41,11 +43,6 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     if not os.path.isfile(remap_file + ".tbi"):
         raise ValueError("No tabix index file could be found for the ReMap file.")
 
-    # Check if output file is a CSV file. If not, add extension '.csv' to output file name.
-    if not output.endswith(".csv"):
-        sys.stderr.write("WARNING: Output file must be a CSV file. Adding extension '.csv' to output file name.\n")
-        output = output + ".csv"
-
     # Start processing the tabix query output
     # Compose tabix query
     command = f"tabix {remap_file} {snp_full_pos}"
@@ -53,9 +50,16 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     # Run command and store output. Requires tabix.
     query_output = os.popen(command).read()
 
-    # Check if the output is empty
+    # Check if the output is empty. If so, give a warning, write an empty file, and return None to quit early.
     if query_output == "":
-        raise ValueError("No ReMap entries found for this SNP.")
+        sys.stderr.write(f"WARNING in extract_studies_for_single_snp : "
+                         f"No ReMap entries found for position {snp_full_pos}\n")
+        if verbose:
+            sys.stderr.write(f"Wrote empty file: {output}\n")
+        # Write empty file
+        with open(output, "w") as f:
+            f.write("study_accession\ttranscription_factor\tbiotype\tdistance_to_snp\n")
+        return None
 
     # Save the output of the tabix query to a file
     if not tmp_dir:  # If no tmp_dir is specified, use the current working directory
@@ -92,7 +96,7 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     out_df = out_df.sort("distance_to_peak")
 
     # Write to file
-    out_df.write_csv(output)
+    out_df.write_csv(output, sep="\t")
 
 
 if __name__ == "__main__":
@@ -102,7 +106,9 @@ if __name__ == "__main__":
                         help="Path to ReMap BED file. Requires tabix index file.")
     parser.add_argument("-t", "--tmp_dir", help="OPTIONAL. Directory to store temporary files. If none is specified, "
                                                 "temporary files will be stored in the current working directory.")
-    parser.add_argument("-o", "--output", required=True, help="Output file. Must be a CSV file.")
+    parser.add_argument("-o", "--output", required=True, help="Output file.")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print verbose output.")
+
     args = parser.parse_args()
 
-    extract_studies_for_single_snp(args.chr_pos, args.remap_file, args.tmp_dir, args.output)
+    extract_studies_for_single_snp(args.chr_pos, args.remap_file, args.tmp_dir, args.output, args.verbose)
