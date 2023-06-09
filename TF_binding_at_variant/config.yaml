@@ -20,6 +20,8 @@ remap_output_dir: "/home/antton/Projects/IgGWAS/transcription_factors/tmp/remap_
 # Output file with the perfectos ape results
 perfectos_ape_output_file: "/home/antton/Projects/IgGWAS/transcription_factors/output/perfectos_ape_output.txt"
 
+# Output file with the overlapping TFs for each variant
+output_file: "/home/antton/Projects/IgGWAS/transcription_factors/output/variants_and_tfs.txt"
 
 ## OTHER PARAMETERS ##
 

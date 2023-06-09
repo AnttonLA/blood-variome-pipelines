@@ -72,18 +72,22 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     with open(tmp_file_path, "w") as f:
         f.write(query_output)
 
-    df = pl.read_csv(tmp_file_path, sep="\t",
+    df = pl.read_csv(tmp_file_path, sep="\t", has_header=False,
                      new_columns=["chrom", "start", "end", "name", "score", "strand", "thickStart", "thickEnd",
-                                  "itemRgb"])
+                                  "itemRgb"],
+                     dtype={"chrom": pl.Utf8, "start": pl.Int64, "end": pl.Int64, "name": pl.Utf8, "score": pl.Float64,
+                            "strand": pl.Utf8, "thickStart": pl.Int64, "thickEnd": pl.Int64, "itemRgb": pl.Utf8})
 
     # Distance of SNP to peak. We'll use this to sort entries later
     # It'd probably be fine to calculate distance to thickStart, but we'll calculate the center of the peak to be safe
     df = df.with_column(pl.struct(['thickStart', 'thickEnd'])
-                        .apply(lambda s: int((s['thickStart'] + s['thickEnd']) / 2))
+                        .apply(lambda s: int((s['thickStart'] + s['thickEnd']) / 2)).cast(pl.Int64)
                         .alias("thickCenter"))
 
     # Calculate distance to SNP pos (stored in variable 'pos')
-    df = df.with_column(pl.col("thickCenter").apply(lambda s: abs(int(s) - int(pos))).alias("distance_to_peak"))
+    df = df.with_column(pl.col("thickCenter")
+                        .apply(lambda s: abs(int(s) - int(pos))).cast(pl.Int64)
+                        .alias("distance_to_peak"))
 
     # Split the name column by '.' and make new columns out of the three entries
     df = df.with_columns([pl.col("name").str.split(".").apply(lambda s: s[0]).alias("study_accession"),

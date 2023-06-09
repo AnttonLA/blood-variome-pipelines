@@ -26,8 +26,9 @@ chr_pos_list = get_chr_pos_for_all_snps(config["variant_file"])
 # Rule to generate the output file(s)
 rule all:
     input:
-        expand(config["remap_output_dir"]+"/remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list),
-        config["perfectos_ape_output_file"]
+        #expand(config["remap_output_dir"]+"/remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list),
+        #config["perfectos_ape_output_file"],
+        config['output_file']
 
 
 # Extract the entries relevant to our variants from the ReMap database
@@ -39,7 +40,7 @@ rule extract_remap_entries:
         tmp_dir = config["tmp_folder"],
         remap_output_dir = config["remap_output_dir"]
     output:
-        expand(config["remap_output_dir"]+"/remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list)
+        expand(config["remap_output_dir"]+"remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list)
     shell:
         "python remap_lookup_for_full_snplist.py \
         -s {input} -r {params.remap_file} -t {params.tmp_dir} -o {params.remap_output_dir}"
@@ -64,3 +65,15 @@ rule perfectos_ape_lookup:
         --samtools {params.samtools} \
         --temp_dir {params.temp_dir} \
         -o {output}"
+
+rule find_tfs_in_both:
+    input:
+        expand(config["remap_output_dir"] + "remap_studies_{chr_pos}.txt",chr_pos=chr_pos_list),
+        config["perfectos_ape_output_file"]
+    params:
+        remap_out_dir = config["remap_output_dir"],
+        perfectos_output = config["perfectos_ape_output_file"],
+    output:
+        config['output_file']
+    shell:
+        "python find_double_evidence_tfs.py -r {params.remap_out_dir} -p {params.perfectos_output} -o {output}"

@@ -38,5 +38,7 @@ df = df.with_column(pl.format("{}:{}", pl.col("Chrom").str.replace("chr", ""), p
 
 # Run extract_studies_for_single_snp() for each chr_pos value
 df = df.with_column(pl.col("chr_pos")
-                    .apply(lambda s: extract_studies_for_single_snp(s, args.remapdb, args.tmpdir,
+                    .apply(lambda s: extract_studies_for_single_snp(s,
+                                                                    args.remapdb,
+                                                                    args.tmpdir,
                                                                     args.output+"remap_studies_"+str(s)+".txt")))
