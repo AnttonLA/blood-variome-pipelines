@@ -58,7 +58,7 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
             sys.stderr.write(f"Wrote empty file: {output}\n")
         # Write empty file
         with open(output, "w") as f:
-            f.write("study_accession\ttranscription_factor\tbiotype\tdistance_to_snp\n")
+            f.write("study_accession\ttranscription_factor\tbiotype\tdistance_to_peak\n")
         return None
 
     # Save the output of the tabix query to a file

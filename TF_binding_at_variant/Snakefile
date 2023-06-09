@@ -6,7 +6,7 @@ import os
 
 def get_chr_pos_for_all_snps(variant_file) -> list:
     """
-    Get chromosome and position for all SNPs in the variant file.
+    Get chromosome and position for all SNPs in the variant file. Return list to be used in expand function.
 
     :param variant_file: Path to the variant file
     :return: List of chromosome and position for all SNPs in the variant file
