@@ -7,10 +7,14 @@ Scripts to look up eQTL data from the [ImmuNexUT database](https://www.immunexut
 
 ## DeCODE_GWAS_analysis
 
-Scripts to analyse GWAS data received from [DeCODE Genetics](https://decode.com/).
-The pipeline has been implemented using [Snakemake](https://snakemake.github.io/) for ease of use and reproducibility.
+[Snakemake](https://snakemake.github.io/) pipeline to analyse GWAS data received from
+[DeCODE Genetics](https://decode.com/).
 
 ## causal_gene_assignment
 
-Pipeline that assignes most likely causal gene to variants uncovered by GWAS.
+Pipeline that assigns most likely causal gene to variants uncovered by GWAS.
+
+## TF_binding_at_variant
+[SnakeMake](https://snakemake.github.io/) pipeline to find the Transcription Factor that is likely being affected by a
+genetic variant.
  
