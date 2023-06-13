@@ -26,3 +26,5 @@ output_file: "/home/antton/Projects/IgGWAS/transcription_factors/output/variants
 ## OTHER PARAMETERS ##
 
 tmp_folder: "/home/antton/Projects/IgGWAS/transcription_factors/tmp/"
+
+samtools: "/home/antton/Programs/samtools-1.17/samtools"
