@@ -45,7 +45,7 @@ pval_thresh_exponent = str(-np.log10(config['pval_thresh']))  # Exponent of p-va
 pval_thresh_str = '10E' + pval_thresh_exponent
 
 phenotype_list = ['_'.join(gwas_file.rstrip('.txt').split('_')[4:-3]) for gwas_file in os.listdir(gwas_gzips_dir)]
-print(phenotype_list)
+print("Phenotype list:\n", phenotype_list)
 
 
 rule all:
