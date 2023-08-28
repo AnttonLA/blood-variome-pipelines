@@ -1,0 +1,11 @@
+sample_file: ""
+
+bgen_dir: ""
+
+phenotype_file: "test_phenotype.tsv"
+
+sex_cov: ""
+
+ancestry_cov: ""
+
+output_dir: "."

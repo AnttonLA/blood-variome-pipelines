@@ -1,3 +1,21 @@
+import pandas as pd
+
+# Define config file
+configfile: "config.yaml"
+
+def get_phenotype_names():
+    pheno_file = config["phenotype_file"]
+
+    # Make sure the file exists
+    assert os.path.exists(pheno_file), "ERROR: Phenotype file does not exist. Check the config file."
+
+    df = pd.read_csv(pheno_file, sep="\t")
+    return df.columns.tolist()[1:]
+
+
+phenotypes = get_phenotype_names()
+
 
 rule all:
     input:
+        expand("config['ouput_dir']/{phenotype}.txt", phenotype=phenotypes)
