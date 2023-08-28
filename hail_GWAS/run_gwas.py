@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import re
 import pandas as pd
 import hail as hl
 
@@ -18,7 +19,7 @@ parser.add_argument("-o", "--output_dir", required=True, help="Output folder whe
 
 args = parser.parse_args()
 
-# Check input files
+# Check input arguments
 for file in [args.sample_file, args.pheno_file]:
     if not os.path.isfile(file):
         raise ValueError(f"File {file} does not exist")
@@ -26,6 +27,14 @@ for file in [args.sample_file, args.pheno_file]:
 if not os.path.isdir(args.bgens_dir) or len(os.listdir(args.bgens_dir)) == 0:
     raise ValueError(f"BGEN folder {args.bgens_dir} does not exist or is empty")
 
+if not os.path.isdir(args.output_dir):
+    os.mkdir(args.output_dir)
+    sys.stdout.write(f"Created output directory {args.output_dir}\n")
+
+
+########################################################################################################################
+# Utility functions
+########################################################################################################################
 
 def check_index(bgens_list: list) -> None:
     """
@@ -67,6 +76,21 @@ def sanitize_filename(filename: str) -> str:
     return sanitized_filename
 
 
+def extract_chromosome_number(file_path: str):
+    """Extract the chromosome number from a file path."""
+    # Use regular expression to find the number after 'chr' and before '.bgen'
+    match = re.search(r'chr(\d+)\.bgen', file_path)
+    if match:
+        return int(match.group(1))
+    else:
+        return None
+
+
+def sort_bgen_files_by_chromosome(bgen_paths: list) -> list:
+    """Sort a list of BGEN file paths by chromosome number."""
+    return sorted(bgen_paths, key=extract_chromosome_number)
+
+
 ########################################################################################################################
 # File loading and checking
 ########################################################################################################################
@@ -74,7 +98,7 @@ def sanitize_filename(filename: str) -> str:
 # Load the sample file. We don't need to do anything with it, but we can make sure it has the right dimensions.
 # See format: https://www.cog-genomics.org/plink/2.0/formats#sample
 sample_df = pd.read_csv(args.sample_file, sep=" ", header=0)
-# Remove the first row, which contains the second header line
+
 for col in ["ID_1", "ID_2", "missing", "sex"]:
     if col not in sample_df.columns.to_list():
         raise ValueError(f"Could not find column {col} in sample file {args.sample_file}. Please check the format "
@@ -82,14 +106,16 @@ for col in ["ID_1", "ID_2", "missing", "sex"]:
 
 print(f"Sample file loaded successfully. It contains {sample_df.shape[0]} samples.")
 
-# Load the bgen files. We first need to make sure that the bgen files are indexed. If they are not, we index them.
+# Load the bgen files
 bgens_abs_paths_list = []
 for f in os.listdir(args.bgens_dir):
     if os.path.isfile(os.path.join(args.bgens_dir, f)) and f.endswith('.bgen'):
         bgens_abs_paths_list.append(os.path.join(args.bgens_dir, f))
 
-# TODO: sort the BGEN files in the list by chromosome order
+# Sort the bgen files by chromosome number
+bgens_abs_paths_list = sort_bgen_files_by_chromosome(bgens_abs_paths_list)
 
+# Check if files are indexed. If not, offer option to index them
 check_index(bgens_abs_paths_list)
 
 # Check the phenotype file. It MUST contain a column named "Sample_ID" and at least one other column with a phenotype
@@ -114,6 +140,26 @@ if len(shared_sample_ids) == 0:
 else:
     print(f"{len(shared_sample_ids)} sample IDs are shared between the sample file and the phenotype file.")
 
+if args.sex_cov is not None:
+    sex_df = pd.read_csv(args.sex_cov, sep="\t", header=0)
+    # Check that the df has two columns only
+    if len(sex_df.columns.to_list()) != 2:
+        raise ValueError("Sex covariate information file must be a tab separated file with two columns. Provided file "
+                         f"'{args.sex_cov}' was not valid. Please provide a valid file.")
+    if 'Sample_ID' not in sex_df.columns.to_list():
+        raise ValueError("Sex covariate file must contain a column named 'Sample_ID'. Please provide a valid file.")
+
+if args.ancestry_cov is not None:
+    ancestry_df = pd.read_csv(args.ancestry_cov, sep="\t", header=0)
+    # Check that the df has at least two columns
+    if len(ancestry_df.columns.to_list()) < 2:
+        raise ValueError("Ancestry covariate information file must be a tab separated file with at least two columns. "
+                         f" Provided file '{args.ancestry_cov}' was not valid. Please provide a valid file.")
+    if 'Sample_ID' not in ancestry_df.columns.to_list():
+        raise ValueError("Ancestry covariate file must contain a column named 'Sample_ID'. Please provide a valid file.")
+
+print(sex_df)
+sys.exit()
 ########################################################################################################################
 # GWAS
 ########################################################################################################################
@@ -152,4 +198,7 @@ for i, phenotype in enumerate(phenotypes_list):
     results.export(output_file, header=True)
 
     inflation = hl.methods.lambda_gc(gwas.p_value)
-    print(f'GWAS #{i+1} complete!\n\tInflation factor: {inflation}\n')
+    print(f'GWAS #{i + 1} complete!\n\tInflation factor: {inflation}\n')
+
+    if i > 2:
+        break  # TODO: Remove this line when testing is complete
