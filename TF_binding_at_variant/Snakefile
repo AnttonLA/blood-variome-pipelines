@@ -4,7 +4,7 @@ configfile: "config.yaml"
 import polars as pl
 import os
 
-def get_chr_pos_for_all_snps(variant_file) -> list:
+def get_chr_pos_for_all_snps(variant_file: str) -> list:
     """
     Get chromosome and position for all SNPs in the variant file. Return list to be used in expand function.
 
@@ -14,7 +14,7 @@ def get_chr_pos_for_all_snps(variant_file) -> list:
     if not os.path.exists(variant_file):
         raise FileNotFoundError(f"Variant file {variant_file} not found.")
 
-    df = pl.read_csv(variant_file, sep="\t",has_header=True)
+    df = pl.read_csv(variant_file, sep="\t", has_header=True)
     df = df.with_column(pl.format("{}:{}", pl.col("Chrom").str.replace("chr", ""), pl.col("Pos")).alias("chr_pos"))
 
     # Extract chr_pos to a list and return it
@@ -40,7 +40,9 @@ rule extract_remap_entries:
         tmp_dir = config["tmp_folder"],
         remap_output_dir = config["remap_output_dir"]
     output:
-        expand(config["remap_output_dir"]+"remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list)
+        expand(config["remap_output_dir"] + "remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list)
+    message:
+        "Extracting ReMap entries for all variants in {input}"
     shell:
         "python remap_lookup_for_full_snplist.py \
         -s {input} -r {params.remap_file} -t {params.tmp_dir} -o {params.remap_output_dir}"
@@ -57,6 +59,8 @@ rule perfectos_ape_lookup:
         temp_dir = config["tmp_folder"]
     output:
         config["perfectos_ape_output_file"]
+    message:
+        "Looking up TF motifs broken by the variants in {input}"
     shell:
         "python perfectos_ape/run_perfectos_hocomoco.py \
         --snplist {input} \
@@ -75,5 +79,7 @@ rule find_tfs_in_both:
         perfectos_output = config["perfectos_ape_output_file"],
     output:
         config['output_file']
+    message:
+        "Checking for TFs in both ReMap and PERFECTOS"
     shell:
         "python find_double_evidence_tfs.py -r {params.remap_out_dir} -p {params.perfectos_output} -o {output}"

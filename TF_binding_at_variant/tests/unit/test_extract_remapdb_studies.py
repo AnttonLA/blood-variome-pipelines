@@ -4,8 +4,9 @@ from extract_remapdb_studies import extract_studies_for_single_snp
 
 def test_extract_studies_for_single_snp():
     remap_file = "./test_data/dummy_remap_file.bed.gz"
-    tmp_dir = "./test_data/"
+    tmp_dir = "./tmp/"
     out_file = "./test_data/output.tsv"
+
     extract_studies_for_single_snp("1:23939135", remap_file, tmp_dir, out_file, True)
 
     # Assert that the output file exists

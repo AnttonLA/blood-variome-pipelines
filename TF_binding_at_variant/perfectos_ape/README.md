@@ -9,4 +9,5 @@ HOmo sapiens COmprehensive MOdel COllection (HOCOMOCO) is a TF binding motif col
 
 **Website:** https://hocomoco11.autosome.org/
 
-**Original publication:** Ivan V. Kulakovskiy and others, HOCOMOCO: expansion and enhancement of the collection of transcription factor binding sites models, Nucleic Acids Research, Volume 44, Issue D1, 4 January 2016, Pages D116–D125, https://doi.org/10.1093/nar/gkv1249
+### Original publication
+Ivan V. Kulakovskiy and others, HOCOMOCO: expansion and enhancement of the collection of transcription factor binding sites models, Nucleic Acids Research, Volume 44, Issue D1, 4 January 2016, Pages D116–D125, https://doi.org/10.1093/nar/gkv1249

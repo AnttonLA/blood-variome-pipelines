@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """
 Script that runs the perfectos-ape java ape.jar for a given snplist
 The snplist file contains a list of SNPs in the following format:
@@ -14,10 +15,11 @@ import argparse
 
 
 def create_hocomoco_input_file(snplist: str, hg38fa: str, samtools: str, output_dir: str,
-                                verbose: bool = False) -> None:
-    """Parse input file and extract chromosome, position. Then expand every position to a total of 60 bp with the SNP
+                               verbose: bool = False) -> None:
+    """
+    Parse input file and extract chromosome, position. Then expand every position to a total of 60 bp with the SNP
     in the middle. The SNP itself is written in brackets (e.g. [A/T]). The output is written to a tmp file and later
-    used as input for the ape.jar. Indels are ignored and saved to a separate list that is outputted at the end.
+    used as input for the ape.jar. Indels are ignored and saved to a separate file ('indels.txt').
 
     :param snplist: Path to the snplist file
     :param hg38fa: Path to the hg38 fasta file
@@ -26,6 +28,7 @@ def create_hocomoco_input_file(snplist: str, hg38fa: str, samtools: str, output_
     :param verbose: If True, print more information to stdout/stderr
     :return:
     """
+
     # Input checks
     if not os.path.isfile(snplist):
         raise ValueError("SNP list file does not exist")
@@ -38,7 +41,7 @@ def create_hocomoco_input_file(snplist: str, hg38fa: str, samtools: str, output_
     # Indels are stored in another temp file, but nothing is done with them.
     indels = []
     with open(snplist, "r") as snp_file:
-        with open(f"{output_dir}/tmp.txt", "w") as tmp_file:
+        with open(f"{output_dir}/perfectos-ape_input.txt", "w") as tmp_file:
             # Skip header
             next(snp_file)
             i = 0
@@ -49,20 +52,10 @@ def create_hocomoco_input_file(snplist: str, hg38fa: str, samtools: str, output_
                     raise ValueError(f"SNP list file is not in the correct format. Error in line {i}: {line}")
                 snp_id, chrom, pos, oa, ea = line[0], line[1], line[2], line[3], line[4]
 
-                # TODO : Manage indels
-                # EXAMPLE OF INDEL THAT CURRENTLY FAILS HERE
-                # chr19:49525049_CCTGCTGCTGCTG_CCTGCTG	TCCTCCCTGAGTCTGACCATCTTCCAT[CCTGCTGCTGCTG/CCTGCTG]ctgctgctgctgctgctgcGG
-                # THIS IS A DELETION OF 4 BASES
-                # THE OA CONTAINS ENOUGH BASES TO MAP IT TO THE REFERENCE
-                # THE BRACKET SECTION SHOULD REPLACE THE ENTIRE SECTION OF THE REFERENCE THAT 'OA' MAPS TO
-                # I.E collect ref -> MATCH CCTGCTGCTGCTG -> REPLACE WITH [CCTGCTGCTGCTG/CCTGCTG] AND THEN CONTINUE SEQUENCE
-                # - Ludvig
-                # TODO: FOR NOW SKIP, LATER IMPLEMENT THESE AS DIFFERENT FUNCTION
-
                 # Collect indels for later processing, skip for now
                 if len(oa) > 1 or len(ea) > 1:
                     if verbose:
-                        sys.stdout.write(f"Skipping indel {snp_id}\n")
+                        sys.stdout.write(f"\nSkipping indel {snp_id}\n")
                     indels.append(snp_id)
                     continue
 
@@ -130,6 +123,6 @@ if __name__ == "__main__":
 
     # Call the perfectos-ape java ape.jar with the given snplist
     # Catch standard output and redirect it to a results file
-    os.system(f"java -jar {ape_jar} {hocomoco_db} {tmp_dir}/tmp.txt > {args['output']}")
+    os.system(f"java -jar {ape_jar} {hocomoco_db} {tmp_dir}/perfectos-ape_input.txt > {args['output']}")
 
     sys.stdout.write("Done!\n")
