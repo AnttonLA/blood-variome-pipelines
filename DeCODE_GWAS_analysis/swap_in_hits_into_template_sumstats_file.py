@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description="Take a template summary statistics
                                              " from GWAS. It takes a full summary statistics file for a single trait"
                                              " and another file containing the GWAS hits from multiple traits. It then"
                                              " swaps in the hits from the GWAS hits file into the full summary"
-                                             "statistics file. The resulting file can be used to generate a Manhattan"
+                                             " statistics file. The resulting file can be used to generate a Manhattan"
                                              " plot that will show all of the hits across several traits.")
 parser.add_argument("template_file",
                     metavar="TEMPLATE_FILEPATH",
