@@ -20,12 +20,18 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     :return: None
     """
 
-    # Input sanitation
+    # Check the input
     if ':' not in chr_pos:
         raise ValueError("SNP position must be in the format '<chr>:<position>'")
 
     if not chr_pos.split(":")[1].isdigit():
         raise ValueError("SNP position must be in the format '<chr>:<position>'")
+
+    # Check that chr_pos does NOT start with 'chr'. If it does, remove it and print a warning.
+    if chr_pos.startswith("chr"):
+        sys.stderr.write("WARNING in extract_studies_for_single_snp : "
+                         "SNP position should not start with 'chr'. Removing 'chr' from SNP position.\n")
+        chr_pos = chr_pos.replace("chr", "")
 
     # Create 'snp_full_pos' variable
     chrom = chr_pos.split(":")[0]  # Chromosome of the SNP
@@ -33,7 +39,7 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     snp_full_pos = f"chr{chrom}:{pos}-{pos}"  # Full position of SNP in 'chr<chrom>:<pos>-<pos>' format, for tabix query
 
     if verbose:
-        sys.stdout.write(f"Requested position: <{snp_full_pos}>\n")
+        sys.stdout.write(f"\nRequested position: <{snp_full_pos}>\n")
 
     # Check if ReMap file exists, it is bgzipped, and it has a tabix index file
     if not os.path.isfile(remap_file):
@@ -42,6 +48,10 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
         raise ValueError("ReMap file must be bgzipped")
     if not os.path.isfile(remap_file + ".tbi"):
         raise ValueError("No tabix index file could be found for the ReMap file.")
+
+    # Check that tabix is installed
+    if os.system("tabix --version") != 0:
+        raise ValueError("tabix is not installed or cannot be reached. Please install tabix and try again.")
 
     # Start processing the tabix query output
     # Compose tabix query
