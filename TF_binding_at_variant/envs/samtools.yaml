@@ -1,0 +1,6 @@
+name: samtools_env
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - samtools=1.12
