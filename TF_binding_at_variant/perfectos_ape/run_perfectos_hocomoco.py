@@ -53,7 +53,7 @@ def create_hocomoco_input_file(snplist: str, hg38fa: str, samtools: str, output_
                 snp_id, chrom, pos, oa, ea = line[0], line[1], line[2], line[3], line[4]
 
                 # Collect indels for later processing, skip for now
-                if len(oa) > 1 or len(ea) > 1:
+                if len(oa) > 1 or len(ea) > 1 or oa == "!" or ea == "!":
                     if verbose:
                         sys.stdout.write(f"\nSkipping indel {snp_id}\n")
                     indels.append(snp_id)

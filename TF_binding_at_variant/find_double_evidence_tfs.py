@@ -8,9 +8,12 @@ show up in both.
 """
 
 # Parse arguments
-parser = argparse.ArgumentParser(description="Look at ReMap and perfectos-ape output and find TFs that show up in both")
+parser = argparse.ArgumentParser(description="Look at ReMap and TFBS disruption prediction (either PERFECTOS-APE or"
+                                             "Fabian) and find TFs that show up in both")
 parser.add_argument("-r", "--remap_dir", required=True, help="Path to directory ReMap output files are stored")
-parser.add_argument("-p", "--perfectos", required=True, help="Path to perfectos-ape output file")
+tf_disruption_group = parser.add_mutually_exclusive_group(required=True)
+tf_disruption_group.add_argument("-p", "--perfectos", help="Path to perfectos-ape output file")
+tf_disruption_group.add_argument("-f", "--fabian", help="Path to fabian output file")
 parser.add_argument("-o", "--output", required=True, help="Output file")
 
 args = parser.parse_args()
@@ -19,8 +22,10 @@ args = parser.parse_args()
 if not os.path.isdir(args.remap_dir):
     raise ValueError(f"ReMap dir {args.remap_dir} does not exist")
 
-if not os.path.isfile(args.perfectos):
+if args.perfectos and not os.path.isfile(args.perfectos):
     raise ValueError(f"perfectos-ape file {args.perfectos} does not exist")
+elif args.fabian and not os.path.isfile(args.fabian):
+    raise ValueError(f"Fabian file {args.fabian} does not exist")
 
 # Read in ReMap files
 remap_df = pl.DataFrame(columns={"study_accession": pl.Utf8,
@@ -46,35 +51,67 @@ for variant in variant_list:
     remap_dict[variant] = remap_df.filter(pl.col("ID") == variant).select("transcription_factor") \
         .get_column("transcription_factor").to_list()
 
-# Read in perfectos-ape file
-perfectos_df = pl.read_csv(args.perfectos, sep="\t", has_header=True)
 
-# Split all the values of the second column of perfectos_df by _ and take the first element of each split (TF name)
-perfectos_df = perfectos_df.with_column(pl.col("motif").str.split("_").apply(lambda s: s[0]).alias("tf_only"))
+def process_perfectos_output():
+    """
+    Read in the output of perfectos-ape and return a dict where the keys are variants and the values are lists of TFs
+    that correspond to that variant.
 
-# Add 'ID' column to perfectos_df for mapping between <chr:pos> and <chr:pos_OA_EA>
-perfectos_df = perfectos_df.with_column(pl.col("# SNP name").str.split("_").apply(lambda s: s[0]).alias("ID"))
+    :return: tf_disruption_dict, chr_pos_oa_ea_map
+    """
+    # Read in perfectos-ape file
+    perfectos_df = pl.read_csv(args.perfectos, sep="\t", has_header=True)
 
-# Create the map out of two lists
-chr_pos_list = perfectos_df.select("ID").get_column("ID").to_list()
-chr_pos_oa_ea_list = perfectos_df.select("# SNP name").get_column("# SNP name").to_list()
-chr_pos_oa_ea_map = {chr_pos_list[i]: chr_pos_oa_ea_list[i] for i in range(len(chr_pos_list))}
+    # Split all the values of the second column of perfectos_df by _ and take the first element of each split (TF name)
+    perfectos_df = perfectos_df.with_column(pl.col("motif").str.split("_").apply(lambda s: s[0]).alias("tf_only"))
 
-# Create dict where variants are keys and a list of TFs is the value, same as we did for the ReMap dict
-perfectos_dict = {}
-variant_list = perfectos_df.select("# SNP name").unique().get_column("# SNP name").to_list()
+    # Add 'ID' column to perfectos_df for mapping between <chr:pos> and <chr:pos_OA_EA>
+    perfectos_df = perfectos_df.with_column(pl.col("# SNP name").str.split("_").apply(lambda s: s[0]).alias("ID"))
 
-for variant in variant_list:
-    variant_no_alleles = variant.split("_")[0]  # Remove _EA_OA from the end of the variant name so that names match the ReMao dict
-    perfectos_dict[variant_no_alleles] = perfectos_df.filter(pl.col("# SNP name") == variant).select("tf_only") \
-        .get_column("tf_only").to_list()
+    # Create the map out of two lists
+    chr_pos_list = perfectos_df.select("ID").get_column("ID").to_list()
+    chr_pos_oa_ea_list = perfectos_df.select("# SNP name").get_column("# SNP name").to_list()
+    chr_pos_oa_ea_map = {chr_pos_list[i]: chr_pos_oa_ea_list[i] for i in range(len(chr_pos_list))}
+
+    # Create dict where variants are keys and a list of TFs is the value, same as we did for the ReMap dict
+    perfectos_dict = {}
+    variant_list = perfectos_df.select("# SNP name").unique().get_column("# SNP name").to_list()
+
+    for variant in variant_list:
+        variant_no_alleles = variant.split("_")[
+            0]  # Remove _EA_OA from the end of the variant name so that names match the ReMao dict
+        perfectos_dict[variant_no_alleles] = perfectos_df.filter(pl.col("# SNP name") == variant).select("tf_only") \
+            .get_column("tf_only").to_list()
+
+    return perfectos_dict, chr_pos_oa_ea_map
+
+
+def process_fabian_output():
+    """
+    Read in the output of Fabian and return a dict where the keys are variants and the values are lists of TFs
+    that correspond to that variant.
+    :return:
+    """
+    # Read in Fabian file
+    fabian_df = pl.read_csv(args.fabian, sep="\t", has_header=True)
+
+    fabian_dict = {}
+    # TODO: Complete this function
+
+    return fabian_dict, None
+
+
+if args.perfectos:
+    tf_disruption_dict, chr_pos_oa_ea_map = process_perfectos_output()
+elif args.fabian:
+    tf_disruption_dict, chr_pos_oa_ea_map = process_fabian_output()
 
 
 # Find the intersection of the two dicts
 output_dict = {}
 for variant in remap_dict.keys():
-    if variant in perfectos_dict.keys():
-        output_dict[variant] = list(set(remap_dict[variant]).intersection(set(perfectos_dict[variant])))
+    if variant in tf_disruption_dict.keys():
+        output_dict[variant] = list(set(remap_dict[variant]).intersection(set(tf_disruption_dict[variant])))
 
 # Write output
 with open(args.output, "w") as f:

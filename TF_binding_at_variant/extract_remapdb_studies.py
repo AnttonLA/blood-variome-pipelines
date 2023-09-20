@@ -49,8 +49,8 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     if not os.path.isfile(remap_file + ".tbi"):
         raise ValueError("No tabix index file could be found for the ReMap file.")
 
-    # Check that tabix is installed
-    if os.system("tabix --version") != 0:
+    # Check that tabix is installed, but don't print anything to stdout/stderr
+    if os.system("tabix --version > /dev/null 2>&1") != 0:
         raise ValueError("tabix is not installed or cannot be reached. Please install tabix and try again.")
 
     # Start processing the tabix query output
