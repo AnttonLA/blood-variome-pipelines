@@ -54,7 +54,7 @@ rule perfectos_ape_lookup:
         config["variant_file"]
     params:
         hg38_fa = config["hg38_fa_file"],
-        hocmomoco = "perfectos_ape/pwm/hocomoco_11_human",
+        hocomomoco = "perfectos_ape/pwm/hocomoco_11_human",
         samtools = config["samtools"],
         temp_dir = config["tmp_folder"]
     output:
@@ -65,10 +65,11 @@ rule perfectos_ape_lookup:
         "python perfectos_ape/run_perfectos_hocomoco.py \
         --snplist {input} \
         --ref {params.hg38_fa} \
-        --hocomoco {params.hocmomoco} \
+        --hocomoco {params.hocomomoco} \
         --samtools {params.samtools} \
         --temp_dir {params.temp_dir} \
         -o {output}"
+
 
 rule find_tfs_in_both:
     input:

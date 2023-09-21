@@ -92,12 +92,8 @@ def process_perfectos_output() -> dict:
     perfectos_dict = {}
     variant_list = perfectos_df.select("# SNP name").unique().get_column("# SNP name").to_list()
 
-    # TODO: make the formatting of variant_list.txt consistent and a hard requirement, and remove formatting here
-
     for variant in variant_list:
-        variant_no_alleles = variant.split("_")[
-            0]  # Remove _EA_OA from the end of the variant name so that names match the ReMao dict
-        perfectos_dict[variant_no_alleles] = perfectos_df.filter(pl.col("# SNP name") == variant).select("tf_only") \
+        perfectos_dict[variant] = perfectos_df.filter(pl.col("# SNP name") == variant).select("tf_only") \
             .get_column("tf_only").to_list()
 
     return perfectos_dict
@@ -125,14 +121,14 @@ def process_fabian_output() -> dict:
     variant_list = fabian_df.select("variant").unique().get_column("variant").to_list()
     for variant in variant_list:
         # Make a list out of every unique entry of the 'tf' column
-        fabian_dict[variant] = fabian_df.filter(pl.col("variant") == variant).select("tf").unique().get_column("tf").to_list()
+        fabian_dict[variant] = fabian_df.filter(pl.col("variant") == variant).select("tf").unique().get_column(
+            "tf").to_list()
 
     return fabian_dict
 
 
 if args.perfectos:
     tf_disruption_dict = process_perfectos_output()
-    print(tf_disruption_dict)
 elif args.fabian:
     tf_disruption_dict = process_fabian_output()
     # Replace the keys of the dict with the same format as the ReMap dict. Use the map file to do this.
@@ -140,7 +136,9 @@ elif args.fabian:
     id_cpoa_map = dict(zip(id_cpoa_map_df.select("Chrom_Pos_OA_EA").get_column("Chrom_Pos_OA_EA").to_list(),
                            id_cpoa_map_df.select("ID").get_column("ID").to_list()))
     tf_disruption_dict = {id_cpoa_map[k.split('.')[0]]: v for k, v in tf_disruption_dict.items()}
-
+else:
+    raise ValueError("Neither perfectos-ape nor fabian were chosen as the TFBS disruption prediction method. This "
+                     "should never happen.")
 
 # Find the intersection of the two dicts
 output_dict = {}
@@ -148,8 +146,27 @@ for variant in remap_dict.keys():
     if variant in tf_disruption_dict.keys():
         output_dict[variant] = list(set(remap_dict[variant]).intersection(set(tf_disruption_dict[variant])))
 
+
+# Define a custom sorting key function to deal with genomic coordinate sorting
+def genome_sort_key(position):
+    """
+    Tiny util to sort genomic coordinates properly
+    :param position:
+    :return:
+    """
+    # Split the position into chromosome and position parts
+    parts = position.split(':')
+    chromosome = int(parts[0].lstrip('chr'))  # Remove 'chr' and convert to int
+    position = int(parts[1])
+    return chromosome, position
+
+
 # Write output
 with open(args.output, "w") as f:
     f.write("ID\tTFs\n")
-    for variant in output_dict.keys():
-        f.write(variant + "\t" + ",".join(output_dict[variant]) + "\n")
+    if list(output_dict.keys())[0].startswith("chr"):
+        for variant in sorted(output_dict.keys(), key=lambda x: genome_sort_key(x)):
+            f.write(variant + "\t" + ",".join(output_dict[variant]) + "\n")
+    else:  # Sort normally if the keys are not in chr:pos format (i.e. they are proper IDs)
+        for variant in sorted(output_dict.keys()):
+            f.write(variant + "\t" + ",".join(output_dict[variant]) + "\n")
