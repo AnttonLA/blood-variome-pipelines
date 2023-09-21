@@ -32,6 +32,6 @@ def add_header_to_raw_fabian_output(input_file, output_file):
 
 
 # Example usage:
-input_file = "/home/antton/Downloads/1695218981_85623_data.tsv"
-output_file = "output_with_header.tsv"
+input_file = "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/fabian_output.tsv"
+output_file = "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/fabian_output_h.tsv"
 add_header_to_raw_fabian_output(input_file, output_file)

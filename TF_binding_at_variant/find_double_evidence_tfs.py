@@ -3,17 +3,24 @@ import polars as pl
 import os
 
 """
-This script will look at the output of both the ReMap database lookup and the perfectos-ape run and find the TFs that
-show up in both.
+This script will look at the output of both the ReMap database lookup and the predicted transcription factor binding
+motif disruption (either FABIAN-Variant or PERFECTOS-APE), and it will find the TFs that show up in both.
+There is a good chance that this TFs are involved in the effect of the variant, since there is both Chip-Seq
+and motif disruption evidence for them.
 """
 
 # Parse arguments
-parser = argparse.ArgumentParser(description="Look at ReMap and TFBS disruption prediction (either PERFECTOS-APE or"
-                                             "Fabian) and find TFs that show up in both")
+parser = argparse.ArgumentParser(description="Look at ReMap and TFBS disruption prediction (either PERFECTOS-APE or "
+                                             "FABIAN-Variant) and find TFs that show up in both")
 parser.add_argument("-r", "--remap_dir", required=True, help="Path to directory ReMap output files are stored")
 tf_disruption_group = parser.add_mutually_exclusive_group(required=True)
 tf_disruption_group.add_argument("-p", "--perfectos", help="Path to perfectos-ape output file")
 tf_disruption_group.add_argument("-f", "--fabian", help="Path to fabian output file")
+parser.add_argument("-fm", "--fabian_map", required=False, help="Path to map file between variant IDs and Fabian "
+                                                                "input in chr:posOA>EA (cpoa) format. Only needed if "
+                                                                "Fabian was chosen for the TFBS disruption prediction.")
+parser.add_argument("-ft", "--fabian_threshold", required=False, default=0.2, help="Threshold for Fabian score. Value "
+                                                                                   "between 0 and 1. Default: 0.2")
 parser.add_argument("-o", "--output", required=True, help="Output file")
 
 args = parser.parse_args()
@@ -26,6 +33,19 @@ if args.perfectos and not os.path.isfile(args.perfectos):
     raise ValueError(f"perfectos-ape file {args.perfectos} does not exist")
 elif args.fabian and not os.path.isfile(args.fabian):
     raise ValueError(f"Fabian file {args.fabian} does not exist")
+
+# If fabian was chosen, make sure a map file was provided
+if args.fabian and not args.fabian_map:
+    raise ValueError("Fabian was chosen for the TFBS disruption prediction, but no map file was provided")
+
+# If fabian was chosen, check the map file exists
+if args.fabian and not os.path.isfile(args.fabian_map):
+    raise ValueError(f"Fabian map file {args.fabian_map} does not exist")
+
+# If perfectos-ape was but fabian map or threshold were provided, raise an warning that they will be ignored
+if args.perfectos and (args.fabian_map or args.fabian_threshold != 0.2):
+    print("Warning: perfectos-ape was chosen as the TFBS disruption prediction method, but a Fabian map file or "
+          "threshold were provided. These will be ignored.")
 
 # Read in ReMap files
 remap_df = pl.DataFrame(columns={"study_accession": pl.Utf8,
@@ -52,12 +72,12 @@ for variant in variant_list:
         .get_column("transcription_factor").to_list()
 
 
-def process_perfectos_output():
+def process_perfectos_output() -> dict:
     """
     Read in the output of perfectos-ape and return a dict where the keys are variants and the values are lists of TFs
     that correspond to that variant.
 
-    :return: tf_disruption_dict, chr_pos_oa_ea_map
+    :return: tf_disruption_dict
     """
     # Read in perfectos-ape file
     perfectos_df = pl.read_csv(args.perfectos, sep="\t", has_header=True)
@@ -68,14 +88,11 @@ def process_perfectos_output():
     # Add 'ID' column to perfectos_df for mapping between <chr:pos> and <chr:pos_OA_EA>
     perfectos_df = perfectos_df.with_column(pl.col("# SNP name").str.split("_").apply(lambda s: s[0]).alias("ID"))
 
-    # Create the map out of two lists
-    chr_pos_list = perfectos_df.select("ID").get_column("ID").to_list()
-    chr_pos_oa_ea_list = perfectos_df.select("# SNP name").get_column("# SNP name").to_list()
-    chr_pos_oa_ea_map = {chr_pos_list[i]: chr_pos_oa_ea_list[i] for i in range(len(chr_pos_list))}
-
     # Create dict where variants are keys and a list of TFs is the value, same as we did for the ReMap dict
     perfectos_dict = {}
     variant_list = perfectos_df.select("# SNP name").unique().get_column("# SNP name").to_list()
+
+    # TODO: make the formatting of variant_list.txt consistent and a hard requirement, and remove formatting here
 
     for variant in variant_list:
         variant_no_alleles = variant.split("_")[
@@ -83,28 +100,46 @@ def process_perfectos_output():
         perfectos_dict[variant_no_alleles] = perfectos_df.filter(pl.col("# SNP name") == variant).select("tf_only") \
             .get_column("tf_only").to_list()
 
-    return perfectos_dict, chr_pos_oa_ea_map
+    return perfectos_dict
 
 
-def process_fabian_output():
+def process_fabian_output() -> dict:
     """
     Read in the output of Fabian and return a dict where the keys are variants and the values are lists of TFs
     that correspond to that variant.
-    :return:
+
+    :return: fabian_dict - {chr:posOA>EA: [TF1, TF2, ...], ...}
     """
     # Read in Fabian file
     fabian_df = pl.read_csv(args.fabian, sep="\t", has_header=True)
 
-    fabian_dict = {}
-    # TODO: Complete this function
+    # Filter out rows where the value of teh "prediction" column is "NA"
+    fabian_df = fabian_df.filter(pl.col("prediction") != "NA")
 
-    return fabian_dict, None
+    # Filter out rows where the absolute value of the "score" column is less than a threshold
+    fabian_score_threshold = args.fabian_threshold  # TODO: this threshold is arbitrary. Some justification is needed.
+    fabian_df = fabian_df.filter(pl.col("score").abs() >= fabian_score_threshold)
+
+    fabian_dict = {}
+    # Separate the df into sub-dfs based on the unique values of the "variant" column
+    variant_list = fabian_df.select("variant").unique().get_column("variant").to_list()
+    for variant in variant_list:
+        # Make a list out of every unique entry of the 'tf' column
+        fabian_dict[variant] = fabian_df.filter(pl.col("variant") == variant).select("tf").unique().get_column("tf").to_list()
+
+    return fabian_dict
 
 
 if args.perfectos:
-    tf_disruption_dict, chr_pos_oa_ea_map = process_perfectos_output()
+    tf_disruption_dict = process_perfectos_output()
+    print(tf_disruption_dict)
 elif args.fabian:
-    tf_disruption_dict, chr_pos_oa_ea_map = process_fabian_output()
+    tf_disruption_dict = process_fabian_output()
+    # Replace the keys of the dict with the same format as the ReMap dict. Use the map file to do this.
+    id_cpoa_map_df = pl.read_csv(args.fabian_map, sep='\t', has_header=True).select(["ID", "Chrom_Pos_OA_EA"])
+    id_cpoa_map = dict(zip(id_cpoa_map_df.select("Chrom_Pos_OA_EA").get_column("Chrom_Pos_OA_EA").to_list(),
+                           id_cpoa_map_df.select("ID").get_column("ID").to_list()))
+    tf_disruption_dict = {id_cpoa_map[k.split('.')[0]]: v for k, v in tf_disruption_dict.items()}
 
 
 # Find the intersection of the two dicts
@@ -117,4 +152,4 @@ for variant in remap_dict.keys():
 with open(args.output, "w") as f:
     f.write("ID\tTFs\n")
     for variant in output_dict.keys():
-        f.write(chr_pos_oa_ea_map[variant] + "\t" + ",".join(output_dict[variant]) + "\n")
+        f.write(variant + "\t" + ",".join(output_dict[variant]) + "\n")

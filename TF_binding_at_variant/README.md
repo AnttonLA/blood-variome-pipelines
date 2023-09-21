@@ -6,7 +6,7 @@ It takes as input a file with the following format:
 
 ```
 ID	Chrom	Pos	OA	EA
-chr1:23935190_G_T	chr1	23935190	G	T
+variant_id	chr1	23935190	G	T
 ```
 
 Currently, there are only two steps:
