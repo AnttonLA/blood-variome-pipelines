@@ -1,4 +1,6 @@
 import argparse
+import sys
+
 import polars as pl
 import os
 
@@ -28,6 +30,9 @@ args = parser.parse_args()
 # Input sanitation. Make sure input files exist.
 if not os.path.isdir(args.remap_dir):
     raise ValueError(f"ReMap dir {args.remap_dir} does not exist")
+# If it does not end in a '/', add it
+if args.remap_dir[-1] != '/':
+    args.remap_dir += '/'
 
 if args.perfectos and not os.path.isfile(args.perfectos):
     raise ValueError(f"perfectos-ape file {args.perfectos} does not exist")
@@ -47,6 +52,13 @@ if args.perfectos and (args.fabian_map or args.fabian_threshold != 0.2):
     print("Warning: perfectos-ape was chosen as the TFBS disruption prediction method, but a Fabian map file or "
           "threshold were provided. These will be ignored.")
 
+
+def print_status(percent):
+    """Prints a status bar to the console. Used to show progress of the script when we iterate through files."""
+    sys.stdout.write("%3d%%\r" % percent)
+    sys.stdout.flush()
+
+
 # Read in ReMap files
 remap_df = pl.DataFrame(columns={"study_accession": pl.Utf8,
                                  "transcription_factor": pl.Utf8,
@@ -65,9 +77,14 @@ for file in os.listdir(args.remap_dir):
 remap_df = remap_df.select(["transcription_factor", "ID"])
 
 # Create a dict where the keys are unique IDs and the values are lists of TFs that correspond to that ID
+sys.stdout.write("\nLoading ReMap data...\n")
 remap_dict = {}
 variant_list = remap_df.select("ID").unique().get_column("ID").to_list()
-for variant in variant_list:
+for i, variant in enumerate(variant_list):
+    # Progress bar
+    percentage = int(i / len(variant_list) * 100)
+    print_status(percentage)
+
     remap_dict[variant] = remap_df.filter(pl.col("ID") == variant).select("transcription_factor") \
         .get_column("transcription_factor").to_list()
 
@@ -104,8 +121,10 @@ def process_fabian_output() -> dict:
     Read in the output of Fabian and return a dict where the keys are variants and the values are lists of TFs
     that correspond to that variant.
 
-    :return: fabian_dict - {chr:posOA>EA: [TF1, TF2, ...], ...}
+    :return: fabian_dict - {'chr:posOA>EA': [TF1, TF2, ...], ...}
     """
+    sys.stdout.write("\nCommencing Fabian processing...\n")
+
     # Read in Fabian file
     fabian_df = pl.read_csv(args.fabian, sep="\t", has_header=True)
 
@@ -116,10 +135,23 @@ def process_fabian_output() -> dict:
     fabian_score_threshold = args.fabian_threshold  # TODO: this threshold is arbitrary. Some justification is needed.
     fabian_df = fabian_df.filter(pl.col("score").abs() >= fabian_score_threshold)
 
+    # Fabian assigns suffixes to the variant names (i.e. .1, .2). We will remove them here
+    fabian_df = fabian_df.with_column(pl.col("variant").str.split(".").apply(lambda s: s[0]).alias("variant"))
+
+    # Replace the keys of the dict with the same format as the ReMap dict. Use the map file to do this.
+    fabian_fortmat_to_id_map_df = pl.read_csv(args.fabian_map, sep='\t', has_header=True).select(["ID", "Chrom:PosOA>EA"])
+    fabian_fortmat_to_id_map = dict(
+        zip(fabian_fortmat_to_id_map_df.select("Chrom:PosOA>EA").get_column("Chrom:PosOA>EA").to_list(),
+            fabian_fortmat_to_id_map_df.select("ID").get_column("ID").to_list()))
+    fabian_df = fabian_df.with_column(pl.col("variant").apply(lambda s: fabian_fortmat_to_id_map[s]).alias("variant"))
+
     fabian_dict = {}
     # Separate the df into sub-dfs based on the unique values of the "variant" column
     variant_list = fabian_df.select("variant").unique().get_column("variant").to_list()
-    for variant in variant_list:
+    for i, variant in enumerate(variant_list):
+        # Progress bar
+        percentage = int(i / len(variant_list) * 100)
+        print_status(percentage)
         # Make a list out of every unique entry of the 'tf' column
         fabian_dict[variant] = fabian_df.filter(pl.col("variant") == variant).select("tf").unique().get_column(
             "tf").to_list()
@@ -131,18 +163,19 @@ if args.perfectos:
     tf_disruption_dict = process_perfectos_output()
 elif args.fabian:
     tf_disruption_dict = process_fabian_output()
-    # Replace the keys of the dict with the same format as the ReMap dict. Use the map file to do this.
-    id_cpoa_map_df = pl.read_csv(args.fabian_map, sep='\t', has_header=True).select(["ID", "Chrom_Pos_OA_EA"])
-    id_cpoa_map = dict(zip(id_cpoa_map_df.select("Chrom_Pos_OA_EA").get_column("Chrom_Pos_OA_EA").to_list(),
-                           id_cpoa_map_df.select("ID").get_column("ID").to_list()))
-    tf_disruption_dict = {id_cpoa_map[k.split('.')[0]]: v for k, v in tf_disruption_dict.items()}
+
+
 else:
     raise ValueError("Neither perfectos-ape nor fabian were chosen as the TFBS disruption prediction method. This "
                      "should never happen.")
 
 # Find the intersection of the two dicts
+sys.stdout.write("\nPerforming cross-check...\n")
+
 output_dict = {}
-for variant in remap_dict.keys():
+for i, variant in enumerate(remap_dict.keys()):
+    percentage = int(i / len(remap_dict.keys()) * 100)
+    print_status(percentage)
     if variant in tf_disruption_dict.keys():
         output_dict[variant] = list(set(remap_dict[variant]).intersection(set(tf_disruption_dict[variant])))
 

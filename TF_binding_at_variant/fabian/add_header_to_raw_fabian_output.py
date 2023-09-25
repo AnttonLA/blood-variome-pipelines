@@ -32,8 +32,8 @@ def add_header_to_raw_fabian_output(headerless_file: str) -> pl.DataFrame:
 if __name__ == '__main__':
 
     # Example usage:
-    input_file = "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/fabian_output.tsv"
-    output_file = "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/fabian_output_h.tsv"
+    input_file = "/home/antton/Projects/IgGWAS/transcription_factors/data/FABIAN_OUTPUT.tsv"
+    output_file = "/home/antton/Projects/IgGWAS/transcription_factors/data/FABIAN_OUTPUT_h.tsv"
     df_with_header = add_header_to_raw_fabian_output(input_file)
 
     # Save the DataFrame to a new TSV file with the header

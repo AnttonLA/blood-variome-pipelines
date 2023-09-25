@@ -21,15 +21,15 @@ if not {"ID", "Chrom", "Pos", "OA", "EA"}.issubset(set(df.columns)):
     raise ValueError(f"Input file {args.input_file} does not have the necessary columns (ID, Chrom, Pos, OA, EA)")
 
 # Create a new column with the desired format
-df = df.with_column((pl.col("Chrom") + ":" + pl.col("Pos") + pl.col("OA") + ">" + pl.col("EA")).alias("Chrom_Pos_OA_EA"))
+df = df.with_column((pl.col("Chrom") + ":" + pl.col("Pos") + pl.col("OA") + ">" + pl.col("EA")).alias("Chrom:PosOA>EA"))
 
-# Produce a map where the keys are "ID" and the values are "Chrom_Pos_OA_EA". Save to file.
-df = df.select(["ID", "Chrom_Pos_OA_EA"])
+# Produce a map where the keys are "ID" and the values are "Chrom:PosOA>EA". Save to file.
+df = df.select(["ID", "Chrom:PosOA>EA"])
 map_file_name = args.map_file if args.map_file else args.output_file + ".map"
 df.write_csv(map_file_name, sep='\t', has_header=True)
 
 # Select only the new column and convert it to a list
-output_series = df.select("Chrom_Pos_OA_EA")
+output_series = df.select("Chrom:PosOA>EA")
 
 # Write the list to a file
 output_series.write_csv(args.output_file, sep='\t', has_header=False)

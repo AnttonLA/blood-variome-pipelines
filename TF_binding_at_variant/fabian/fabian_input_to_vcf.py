@@ -38,8 +38,7 @@ for i in range(num_output_files):
     with open(os.path.join(args.output_dir, vcf_file_name), "w") as vcf_file:
         # Define the header for the VCF file
         header = """##fileformat=VCFv4.2
-        #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  NA00001
-        """
+        #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  NA00001"""
 
         vcf_file.write(header)
 
