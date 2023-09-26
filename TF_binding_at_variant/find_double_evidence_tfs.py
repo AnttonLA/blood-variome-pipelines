@@ -89,6 +89,8 @@ for i, variant in enumerate(variant_list):
         .get_column("transcription_factor").to_list()
 
 
+# ReMap dict IDs are chr:pos only
+
 def process_perfectos_output() -> dict:
     """
     Read in the output of perfectos-ape and return a dict where the keys are variants and the values are lists of TFs
@@ -121,9 +123,9 @@ def process_fabian_output() -> dict:
     Read in the output of Fabian and return a dict where the keys are variants and the values are lists of TFs
     that correspond to that variant.
 
-    :return: fabian_dict - {'chr:posOA>EA': [TF1, TF2, ...], ...}
+    :return: fabian_dict - {'chr:pos_OA_EA': [TF1, TF2, ...], ...}
     """
-    sys.stdout.write("\nCommencing Fabian processing...\n")
+    sys.stdout.write("\nCommencing Fabian data processing...\n")
 
     # Read in Fabian file
     fabian_df = pl.read_csv(args.fabian, sep="\t", has_header=True)
@@ -138,22 +140,27 @@ def process_fabian_output() -> dict:
     # Fabian assigns suffixes to the variant names (i.e. .1, .2). We will remove them here
     fabian_df = fabian_df.with_column(pl.col("variant").str.split(".").apply(lambda s: s[0]).alias("variant"))
 
-    # Replace the keys of the dict with the same format as the ReMap dict. Use the map file to do this.
-    fabian_fortmat_to_id_map_df = pl.read_csv(args.fabian_map, sep='\t', has_header=True).select(["ID", "Chrom:PosOA>EA"])
-    fabian_fortmat_to_id_map = dict(
-        zip(fabian_fortmat_to_id_map_df.select("Chrom:PosOA>EA").get_column("Chrom:PosOA>EA").to_list(),
-            fabian_fortmat_to_id_map_df.select("ID").get_column("ID").to_list()))
-    fabian_df = fabian_df.with_column(pl.col("variant").apply(lambda s: fabian_fortmat_to_id_map[s]).alias("variant"))
+    # We will now replace the keys of the dict with the same format as the ReMap dict. Use the map file to do this.
+    fabian_format_to_id_map_df = pl.read_csv(args.fabian_map, sep='\t', has_header=True).select(
+        ["ID", "Chrom:PosOA>EA"])
+    fabian_format_to_id_map = dict(
+        zip(fabian_format_to_id_map_df.select("Chrom:PosOA>EA").get_column("Chrom:PosOA>EA").to_list(),
+            fabian_format_to_id_map_df.select("ID").get_column("ID").to_list()))
+    # Drop any rows where the variant is not in the map file
+    fabian_df = fabian_df.filter(pl.col("variant").is_in(pl.Series('variant', list(fabian_format_to_id_map.keys()))))
+    # Replace the keys
+    fabian_df = fabian_df.with_column(pl.col("variant").apply(lambda s: fabian_format_to_id_map[s]).alias("variant"))
 
     fabian_dict = {}
     # Separate the df into sub-dfs based on the unique values of the "variant" column
     variant_list = fabian_df.select("variant").unique().get_column("variant").to_list()
     for i, variant in enumerate(variant_list):
         # Progress bar
-        percentage = int(i / len(variant_list) * 100)
-        print_status(percentage)
+        percent = int(i / len(variant_list) * 100)
+        print_status(percent)
+        variant_short = variant.split("_")[0]  # Remove the _<OA>_<EA> suffix from the dict key (i.e. chr1:23935190_G_T to chr1:23935190)
         # Make a list out of every unique entry of the 'tf' column
-        fabian_dict[variant] = fabian_df.filter(pl.col("variant") == variant).select("tf").unique().get_column(
+        fabian_dict[variant_short] = fabian_df.filter(pl.col("variant") == variant).select("tf").unique().get_column(
             "tf").to_list()
 
     return fabian_dict
@@ -163,8 +170,6 @@ if args.perfectos:
     tf_disruption_dict = process_perfectos_output()
 elif args.fabian:
     tf_disruption_dict = process_fabian_output()
-
-
 else:
     raise ValueError("Neither perfectos-ape nor fabian were chosen as the TFBS disruption prediction method. This "
                      "should never happen.")
@@ -176,8 +181,12 @@ output_dict = {}
 for i, variant in enumerate(remap_dict.keys()):
     percentage = int(i / len(remap_dict.keys()) * 100)
     print_status(percentage)
-    if variant in tf_disruption_dict.keys():
-        output_dict[variant] = list(set(remap_dict[variant]).intersection(set(tf_disruption_dict[variant])))
+    if variant in list(tf_disruption_dict.keys()):
+        if 'X' in variant:
+            variant_sanitized = variant.replace("X", "23")
+        else:
+            variant_sanitized = variant
+        output_dict[variant_sanitized] = list(set(remap_dict[variant]).intersection(set(tf_disruption_dict[variant])))
 
 
 # Define a custom sorting key function to deal with genomic coordinate sorting
