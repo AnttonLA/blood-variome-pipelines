@@ -80,6 +80,8 @@ remap_df = remap_df.select(["transcription_factor", "ID"])
 sys.stdout.write("\nLoading ReMap data...\n")
 remap_dict = {}
 variant_list = remap_df.select("ID").unique().get_column("ID").to_list()
+print("REMAP DATAFRAME\n", remap_df)
+print("VARIANT LIST\n:", variant_list[:2])
 for i, variant in enumerate(variant_list):
     # Progress bar
     percentage = int(i / len(variant_list) * 100)
@@ -139,7 +141,6 @@ def process_fabian_output() -> dict:
 
     # Fabian assigns suffixes to the variant names (i.e. .1, .2). We will remove them here
     fabian_df = fabian_df.with_column(pl.col("variant").str.split(".").apply(lambda s: s[0]).alias("variant"))
-
     # We will now replace the keys of the dict with the same format as the ReMap dict. Use the map file to do this.
     fabian_format_to_id_map_df = pl.read_csv(args.fabian_map, sep='\t', has_header=True).select(
         ["ID", "Chrom:PosOA>EA"])
@@ -158,7 +159,8 @@ def process_fabian_output() -> dict:
         # Progress bar
         percent = int(i / len(variant_list) * 100)
         print_status(percent)
-        variant_short = variant.split("_")[0]  # Remove the _<OA>_<EA> suffix from the dict key (i.e. chr1:23935190_G_T to chr1:23935190)
+        variant_short = variant.split("_")[
+            0]  # Remove the _<OA>_<EA> suffix from the dict key (i.e. chr1:23935190_G_T to chr1:23935190)
         # Make a list out of every unique entry of the 'tf' column
         fabian_dict[variant_short] = fabian_df.filter(pl.col("variant") == variant).select("tf").unique().get_column(
             "tf").to_list()
@@ -174,6 +176,8 @@ else:
     raise ValueError("Neither perfectos-ape nor fabian were chosen as the TFBS disruption prediction method. This "
                      "should never happen.")
 
+print(f"TF disruption dict: \n{list(tf_disruption_dict.items())[:2]}")
+print(f"Remap dict: \n{list(remap_dict.items())[:2]}")
 # Find the intersection of the two dicts
 sys.stdout.write("\nPerforming cross-check...\n")
 
@@ -202,6 +206,9 @@ def genome_sort_key(position):
     position = int(parts[1])
     return chromosome, position
 
+
+# Print the first 10 elements of 'output_dict'
+print("\nOutput_dict:\n", list(output_dict.items())[:4])
 
 # Write output
 with open(args.output, "w") as f:

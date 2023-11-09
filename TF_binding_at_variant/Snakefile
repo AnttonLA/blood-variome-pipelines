@@ -14,11 +14,11 @@ def get_chr_pos_for_all_snps(variant_file: str) -> list:
     if not os.path.exists(variant_file):
         raise FileNotFoundError(f"Variant file {variant_file} not found.")
 
-    df = pl.read_csv(variant_file, sep="\t", has_header=True)
-    df = df.with_column(pl.format("{}:{}", pl.col("Chrom").str.replace("chr", ""), pl.col("Pos")).alias("chr_pos"))
+    df = pl.read_csv(variant_file, sep="\t", has_header=True, dtypes={"Chrom": pl.Utf8, "Pos": pl.Utf8})
+    df = df.with_columns([pl.format("{}:{}", pl.col("Chrom").str.replace("chr", ""), pl.col("Pos")).alias("chr_pos")])
 
     # Extract chr_pos to a list and return it
-    return df.get_column("chr_pos").to_list()
+    return df.get_column("chr_pos").unique().to_list()
 
 
 chr_pos_list = get_chr_pos_for_all_snps(config["variant_file"])
@@ -26,8 +26,8 @@ chr_pos_list = get_chr_pos_for_all_snps(config["variant_file"])
 # Rule to generate the output file(s)
 rule all:
     input:
-        #expand(config["remap_output_dir"]+"/remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list),
-        #config["perfectos_ape_output_file"],
+        expand(os.path.join(config["remap_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),
+        config["perfectos_ape_output_file"],
         config['output_file']
 
 
@@ -40,7 +40,7 @@ rule extract_remap_entries:
         tmp_dir = config["tmp_folder"],
         remap_output_dir = config["remap_output_dir"]
     output:
-        expand(config["remap_output_dir"] + "remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list)
+        expand(os.path.join(config["remap_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list)
     message:
         "Extracting ReMap entries for all variants in {input}"
     shell:
@@ -73,7 +73,7 @@ rule perfectos_ape_lookup:
 
 rule find_tfs_in_both:
     input:
-        expand(config["remap_output_dir"] + "remap_studies_{chr_pos}.txt", chr_pos=chr_pos_list),
+        expand(os.path.join(config["remap_output_dir"] + "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),
         config["perfectos_ape_output_file"]
     params:
         remap_out_dir = config["remap_output_dir"],

@@ -27,18 +27,20 @@ if not os.path.isdir(args.tmpdir):
     raise ValueError("Temporary directory does not exist")
 
 # Read snplist
-df = pl.read_csv(args.snplist, sep="\t", has_header=True)
+df = pl.read_csv(args.snplist, sep="\t", has_header=True,
+                 dtypes={"Chrom": pl.Utf8, "Pos": pl.Int64, "OA": pl.Utf8, "EA": pl.Utf8})
 
 # Check that columns "ID", "Chrom", "Pos", "OA", "EA" exist
 if df.columns != ["ID", "Chrom", "Pos", "OA", "EA"]:
     raise ValueError("Input file does not have the correct columns. The columns should be: ID, Chrom, Pos, OA, EA")
 
 # Combine columns Chrom (without 'chr') and Pos with a ':' in between into a new column called chr_pos
-df = df.with_column(pl.format("{}:{}", pl.col("Chrom").str.replace("chr", ""), pl.col("Pos")).alias("chr_pos"))
+df = df.with_columns([pl.format("{}:{}", pl.col("Chrom").str.replace("chr", ""), pl.col("Pos")).alias("chr_pos")])
 
 # Run extract_studies_for_single_snp() for each chr_pos value
 df = df.with_column(pl.col("chr_pos")
                     .apply(lambda s: extract_studies_for_single_snp(s,
                                                                     args.remapdb,
                                                                     args.tmpdir,
-                                                                    args.output+"remap_studies_"+str(s)+".txt")))
+                                                                    os.path.join(args.output,
+                                                                                 f"remap_studies_{str(s)}.txt"))))

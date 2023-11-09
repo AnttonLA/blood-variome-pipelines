@@ -3,7 +3,8 @@
 
 # List of variant(s) to be tested. A.k.a. the "snplist".
 # It should be a tab-separated file with the following columns: ID, Chrom, Pos, OA, EA
-variant_file: "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/snplist.txt"
+variant_file: "/home/antton/Projects/MM_GWAS/data/raw/snplist.txt"
+  #"/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/snplist.txt"
 
 # ReMap metadata BED file. Remember it needs to be bgzipped and tabix indexed!
 remap_data_file: "/home/antton/Tiny_Projects/ReMap_ChIP-seq_metadata_pipeline/data/remap2022_all_macs2_hg38_v1_0.bed.gz"
@@ -15,16 +16,16 @@ hg38_fa_file: "/media/antton/cbio3/projects/Zain_2021/hg38FASTA/hg38.fa"
 ## OUTPUT FILES ##
 
 # CSV file with the studies with TFs that overlap the variant
-remap_output_dir: "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/tmp/remap_lookup_outputs/"
+remap_output_dir: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/remap_lookup_outputs/"
 
 # Output file with the perfectos ape results
-perfectos_ape_output_file: "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/tmp/perfectos_ape_output.txt"
+perfectos_ape_output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/perfectos_ape_output.txt"
 
 # Output file with the overlapping TFs for each variant
-output_file: "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/variants_and_tfs.txt"
+output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/variants_and_tfs.txt"
 
 ## OTHER PARAMETERS ##
 
-tmp_folder: "/home/antton/Projects/CordBlood_GWAS/transcription_factor_lookup/tmp/"
+tmp_folder: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/"
 
 samtools: "/home/antton/Programs/samtools-1.17/samtools"
