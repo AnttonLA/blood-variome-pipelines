@@ -3,8 +3,14 @@ import os
 import argparse
 import sys
 
+"""
+This script is used to look up the ReMap studies with ChIP-seq data for a transcription factor that binds over a SINGLE,
+ specific genetic variant.
+"""
 
-def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, output: str, verbose: bool = False) -> None:
+
+def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, output: str,
+                                   verbose: bool = False) -> None:
     """
     This function will take the position of a SNP ('chr_pos') and produce a tabix query to the ReMap metadata file
     (filepath stored in 'remap_file'). It will then process the output of the tabix query to produce a table with the
@@ -29,7 +35,7 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
 
     # Check that chr_pos does NOT start with 'chr'. If it does, remove it and print a warning.
     if chr_pos.startswith("chr"):
-        sys.stderr.write("WARNING in extract_studies_for_single_snp : "
+        sys.stderr.write("\nWARNING in extract_studies_for_single_snp : "
                          "SNP position should not start with 'chr'. Removing 'chr' from SNP position.\n")
         chr_pos = chr_pos.replace("chr", "")
 
@@ -62,7 +68,7 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
 
     # Check if the output is empty. If so, give a warning, write an empty file, and return None to quit early.
     if query_output == "":
-        sys.stderr.write(f"WARNING in extract_studies_for_single_snp : "
+        sys.stderr.write(f"\nWARNING in extract_studies_for_single_snp : "
                          f"No ReMap entries found for position {snp_full_pos}\n")
         if verbose:
             sys.stderr.write(f"Wrote empty file: {output}\n")
@@ -82,22 +88,22 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     with open(tmp_file_path, "w") as f:
         f.write(query_output)
 
-    df = pl.read_csv(tmp_file_path, sep="\t", has_header=False,
+    df = pl.read_csv(tmp_file_path, separator="\t", has_header=False,
                      new_columns=["chrom", "start", "end", "name", "score", "strand", "thickStart", "thickEnd",
                                   "itemRgb"],
-                     dtype={"chrom": pl.Utf8, "start": pl.Int64, "end": pl.Int64, "name": pl.Utf8, "score": pl.Float64,
-                            "strand": pl.Utf8, "thickStart": pl.Int64, "thickEnd": pl.Int64, "itemRgb": pl.Utf8})
+                     dtypes={"chrom": pl.Utf8, "start": pl.Int64, "end": pl.Int64, "name": pl.Utf8, "score": pl.Float64,
+                             "strand": pl.Utf8, "thickStart": pl.Int64, "thickEnd": pl.Int64, "itemRgb": pl.Utf8})
 
     # Distance of SNP to peak. We'll use this to sort entries later
     # It'd probably be fine to calculate distance to thickStart, but we'll calculate the center of the peak to be safe
-    df = df.with_column(pl.struct(['thickStart', 'thickEnd'])
-                        .apply(lambda s: int((s['thickStart'] + s['thickEnd']) / 2)).cast(pl.Int64)
-                        .alias("thickCenter"))
+    df = df.with_columns(pl.struct(['thickStart', 'thickEnd'])
+                         .apply(lambda s: int((s['thickStart'] + s['thickEnd']) / 2)).cast(pl.Int64)
+                         .alias("thickCenter"))
 
     # Calculate distance to SNP pos (stored in variable 'pos')
-    df = df.with_column(pl.col("thickCenter")
-                        .apply(lambda s: abs(int(s) - int(pos))).cast(pl.Int64)
-                        .alias("distance_to_peak"))
+    df = df.with_columns(pl.col("thickCenter")
+                         .apply(lambda s: abs(int(s) - int(pos))).cast(pl.Int64)
+                         .alias("distance_to_peak"))
 
     # Split the name column by '.' and make new columns out of the three entries
     df = df.with_columns([pl.col("name").str.split(".").apply(lambda s: s[0]).alias("study_accession"),
@@ -110,7 +116,7 @@ def extract_studies_for_single_snp(chr_pos: str, remap_file: str, tmp_dir: str, 
     out_df = out_df.sort("distance_to_peak")
 
     # Write to file
-    out_df.write_csv(output, sep="\t")
+    out_df.write_csv(output, separator="\t")
 
 
 if __name__ == "__main__":

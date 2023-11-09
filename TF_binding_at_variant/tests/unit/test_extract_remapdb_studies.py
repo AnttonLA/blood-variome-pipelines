@@ -3,9 +3,12 @@ from extract_remapdb_studies import extract_studies_for_single_snp
 
 
 def test_extract_studies_for_single_snp():
-    remap_file = "./test_data/dummy_remap_file.bed.gz"
-    tmp_dir = "./tmp/"
-    out_file = "./test_data/output.tsv"
+    dir_of_file = os.path.dirname(os.path.abspath(__file__))
+    tests_dir = os.path.split(dir_of_file)[0]
+
+    remap_file = os.path.join(tests_dir, "test_data/dummy_remap_file.bed.gz")
+    tmp_dir = os.path.join(tests_dir, "tmp/")
+    out_file = os.path.join(tests_dir, "test_data/output.tsv")
 
     extract_studies_for_single_snp("1:23939135", remap_file, tmp_dir, out_file, True)
 

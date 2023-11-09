@@ -18,9 +18,6 @@ hg38_fa_file: "/media/antton/cbio3/projects/Zain_2021/hg38FASTA/hg38.fa"
 # CSV file with the studies with TFs that overlap the variant
 remap_output_dir: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/remap_lookup_outputs/"
 
-# Output file with the perfectos ape results
-perfectos_ape_output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/perfectos_ape_output.txt"
-
 # Output file with the overlapping TFs for each variant
 output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/variants_and_tfs.txt"
 

@@ -48,29 +48,6 @@ rule extract_remap_entries:
         -s {input} -r {params.remap_file} -t {params.tmp_dir} -o {params.remap_output_dir}"
 
 
-# Get all the TF motifs broken by the variant
-rule perfectos_ape_lookup:
-    input:
-        config["variant_file"]
-    params:
-        hg38_fa = config["hg38_fa_file"],
-        hocomomoco = "perfectos_ape/pwm/hocomoco_11_human",
-        samtools = config["samtools"],
-        temp_dir = config["tmp_folder"]
-    output:
-        config["perfectos_ape_output_file"]
-    message:
-        "Looking up TF motifs broken by the variants in {input}"
-    shell:
-        "python perfectos_ape/run_perfectos_hocomoco.py \
-        --snplist {input} \
-        --ref {params.hg38_fa} \
-        --hocomoco {params.hocomomoco} \
-        --samtools {params.samtools} \
-        --temp_dir {params.temp_dir} \
-        -o {output}"
-
-
 rule find_tfs_in_both:
     input:
         expand(os.path.join(config["remap_output_dir"] + "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),

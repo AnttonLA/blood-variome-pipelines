@@ -1,0 +1,3 @@
+study_accession	transcription_factor	biotype	distance_to_peak
+ENCSR000BHJ	PAX5	GM12878	61
+ENCSR000BHD	PAX5	GM12878	77
