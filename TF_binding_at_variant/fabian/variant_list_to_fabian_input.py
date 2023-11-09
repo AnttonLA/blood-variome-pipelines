@@ -2,6 +2,11 @@ import os
 import polars as pl
 import argparse
 
+
+"""
+Convert a variant list into the format required by FABIAN-Variant.
+"""
+
 parser = argparse.ArgumentParser(description="Convert a variant list to the format required by FABIAN-Variant")
 parser.add_argument("input_file", help="Path to input variant file")
 parser.add_argument("-m", "--map_file", required=False, help="Name of the map file between variant IDs and Fabian "
