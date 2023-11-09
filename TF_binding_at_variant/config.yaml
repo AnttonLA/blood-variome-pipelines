@@ -15,8 +15,9 @@ hg38_fa_file: "/media/antton/cbio3/projects/Zain_2021/hg38FASTA/hg38.fa"
 
 ## OUTPUT FILES ##
 
-# CSV file with the studies with TFs that overlap the variant
-remap_output_dir: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/remap_lookup_outputs/"
+# TSV file with the studies with TFs that overlap the variant
+remap_tmp_output_dir: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/remap_lookup_outputs/"
+remap_output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/output/remap_lookup_output.tsv"
 
 # Output file with the overlapping TFs for each variant
 output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/variants_and_tfs.txt"
@@ -26,3 +27,6 @@ output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/variants
 tmp_folder: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/"
 
 samtools: "/home/antton/Programs/samtools-1.17/samtools"
+
+# Biotypes used to filter the ReMap database data
+filters_str: "K-562 CD34_ERYTH_BMP"

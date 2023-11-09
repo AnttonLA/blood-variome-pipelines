@@ -14,7 +14,7 @@ def get_chr_pos_for_all_snps(variant_file: str) -> list:
     if not os.path.exists(variant_file):
         raise FileNotFoundError(f"Variant file {variant_file} not found.")
 
-    df = pl.read_csv(variant_file, sep="\t", has_header=True, dtypes={"Chrom": pl.Utf8, "Pos": pl.Utf8})
+    df = pl.read_csv(variant_file, separator="\t", has_header=True, dtypes={"Chrom": pl.Utf8, "Pos": pl.Utf8})
     df = df.with_columns([pl.format("{}:{}", pl.col("Chrom").str.replace("chr", ""), pl.col("Pos")).alias("chr_pos")])
 
     # Extract chr_pos to a list and return it
@@ -26,9 +26,9 @@ chr_pos_list = get_chr_pos_for_all_snps(config["variant_file"])
 # Rule to generate the output file(s)
 rule all:
     input:
-        expand(os.path.join(config["remap_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),
-        config["perfectos_ape_output_file"],
-        config['output_file']
+        expand(os.path.join(config["remap_tmp_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),
+        config["remap_output_file"],
+        #config['output_file']
 
 
 # Extract the entries relevant to our variants from the ReMap database
@@ -38,9 +38,9 @@ rule extract_remap_entries:
     params:
         remap_file = config["remap_data_file"],
         tmp_dir = config["tmp_folder"],
-        remap_output_dir = config["remap_output_dir"]
+        remap_output_dir = config["remap_tmp_output_dir"]
     output:
-        expand(os.path.join(config["remap_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list)
+        expand(os.path.join(config["remap_tmp_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list)
     message:
         "Extracting ReMap entries for all variants in {input}"
     shell:
@@ -48,6 +48,20 @@ rule extract_remap_entries:
         -s {input} -r {params.remap_file} -t {params.tmp_dir} -o {params.remap_output_dir}"
 
 
+rule compose_remap_lookup_output_file:
+    input:
+        expand(os.path.join(config["remap_tmp_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list)
+    params:
+        remap_tmp_output_dir = config["remap_tmp_output_dir"],
+        filters_str = config["filters_str"],
+    output:
+        config["remap_output_file"]
+    message:
+        "Composing final ReMap output file"
+    shell:
+        "python produce_final_remap_output.py -d {params.remap_tmp_output_dir} -f {params.filters_str} -o {output}"
+
+"""
 rule find_tfs_in_both:
     input:
         expand(os.path.join(config["remap_output_dir"] + "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),
@@ -61,3 +75,4 @@ rule find_tfs_in_both:
         "Checking for TFs in both ReMap and PERFECTOS"
     shell:
         "python find_double_evidence_tfs.py -r {params.remap_out_dir} -p {params.perfectos_output} -o {output}"
+"""

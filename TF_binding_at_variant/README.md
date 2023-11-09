@@ -12,16 +12,14 @@ variant_id	chr1	23935190	G	T
 
 You will also need:
 * ReMap metadata BED file, bgzipped and tabix-indexed
-* Reference genome fasta file (used by PERFECTOS-APE)
 
 ## Steps
 Currently, there are only three steps to this pipeline:
 
 1. Look up entries of the ReMAP database (https://remap2022.univ-amu.fr/) to find Transcription Factors that
 bind over a given variant.
-2. Use either FABIAN-Variant (https://www.genecascade.org/fabian/) or PERFECTOS-APE
-(https://opera.autosome.org/perfectosape) to find the transcription factors whose binding motif is likely disrupted by
-the variant.
+2. Use either FABIAN-Variant (https://www.genecascade.org/fabian/) to find the transcription factors whose binding motif is likely
+ disrupted (or created/strengthened) by the variant.
 3. Finally, the pipeline will then assign those TFs that appear in **BOTH** to the variant.
 
 It **requires tabix** to perform the lookup on the ReMap metadata table and find all the relevant studies. 
@@ -64,10 +62,9 @@ Some steps that I would like to add to the pipeline include:
 
 ## References
 
-E. Vorontsov, I.; V. Kulakovskiy, I.; Khimulya, G.; D. Nikolaeva, D. and J. Makeev, V. (2015). **PERFECTOS-APE -
-Predicting Regulatory Functional Effect of SNPs by Approximate P-value Estimation.** In *Proceedings of the
-International Conference on Bioinformatics Models, Methods and Algorithms (BIOSTEC 2015) - BIOINFORMATICS*; ISBN
-978-989-758-070-3; ISSN 2184-4305, SciTePress, pages 102-108. DOI: 10.5220/0005189301020108
+Fayrouz Hammal, Pierre De Langen, Aurélie Bergon, Fabrice Lopez, Benoit Ballester, **ReMap 2022: a database of Human, Mouse, 
+Drosophila and Arabidopsis regulatory regions from an integrative analysis of DNA-binding sequencing experiments**, 
+*Nucleic Acids Research*, Volume 50, Issue D1, 7 January 2022 
 
 Robin Steinhaus, Peter N Robinson, Dominik Seelow, **FABIAN-variant: predicting the effects of DNA variants on
 transcription factor binding**, *Nucleic Acids Research*, Volume 50, Issue W1, 5 July 2022, Pages W322–W329,

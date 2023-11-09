@@ -1,5 +1,7 @@
 import os
 import argparse
+import sys
+
 import polars as pl
 from extract_remapdb_studies import extract_studies_for_single_snp
 
@@ -56,5 +58,14 @@ if __name__ == "__main__":
     if not os.path.isfile(args.snplist):
         raise ValueError("Input file does not exist")
 
-    if not os.path.isdir(args.tmpdir):
+    if not os.path.isfile(args.remapdb):
+        raise ValueError("ReMap database file does not exist")
+
+    if not os.path.isdir(args.tmp_dir):
         raise ValueError("Temporary directory does not exist")
+
+    if not os.path.isdir(args.output_dir):
+        sys.stdout.write(f"\nOutput directory {args.output_dir} does not exist. Creating it now.\n")
+        os.mkdir(args.output_dir)
+
+    remap_lookup_for_full_snplist(args.snplist, args.remapdb, args.tmp_dir, args.output_dir)
