@@ -8,13 +8,36 @@ Convert a variant list into the format required by FABIAN-Variant.
 """
 
 
-def variant_list_to_fabian_input_vcf(variant_file, output_dir):
+def create_map_file(snplist_df: pl.DataFrame, map_file: str) -> None:
     """
-    This function will take a file containing information about variants and convert it to a VCF file.
+    Create a map file between variants and the format required by FABIAN-Variant.
+    It will be a modified version of the input variant file, with the added column Chrom:PosOA>EA.
+
+    :param snplist_df: Input variant list DataFrame. It needs to have the columns: ID, Chrom, Pos, OA, EA
+    :param map_file: Path to output map file
+    :return:
+    """
+    # Ensure the input DataFrame has the necessary columns (ID, Chrom, Pos, OA, EA)
+    if not {"ID", "Chrom", "Pos", "OA", "EA"}.issubset(set(snplist_df.columns)):
+        raise ValueError(
+            f"Input DataFrame does not have the necessary columns (ID, Chrom, Pos, OA, EA)")
+
+    df = snplist_df
+    # Create a new column with the desired format
+    df = df.with_columns(
+        (pl.col("Chrom").cast(pl.Utf8) + ":" + pl.col("Pos").cast(pl.Utf8) + pl.col("OA").cast(pl.Utf8) + ">" + pl.col("EA").cast(pl.Utf8)).alias("Chrom:PosOA>EA"))
+
+    # Produce a map where the keys are "ID" and the values are "Chrom:PosOA>EA". Save to file.
+    df.write_csv(map_file, separator='\t', has_header=True)
+
+
+def variant_list_to_fabian_input_vcf(variant_file: str, output_dir: str) -> None:
+    """
+    Take a variant list file (a.k.a. snplist) and convert it to a VCF file.
     The resulting file will be used as an input for FABIAN-Variant.
     
-    :param variant_file: 
-    :param output_dir: 
+    :param variant_file: Input variant list file. It needs to have the columns: ID, Chrom, Pos, OA, EA
+    :param output_dir: Directory where the VCF file(s) will be created
     :return: 
     """
     # Check if the input file exists
@@ -29,19 +52,19 @@ def variant_list_to_fabian_input_vcf(variant_file, output_dir):
             f"Input variant list file {variant_file} does not have the necessary columns. Please ensure "
             f"the file contains the columns ID, Chrom, Pos, OA, EA.")
 
-    # Remove the 'chr' prefix from the Chrom column
+    # Create a map file needed to untangle FABIAN-Variant output later
+    create_map_file(df, os.path.join(output_dir, os.path.basename(variant_file) + ".map"))
+
+    # Remove the 'chr' prefix from the Chrom column and change its type to int
     df = df.with_columns(pl.col("Chrom").str.replace("chr", "").alias("Chrom"))
-    # Change its dtype to int
     df = df.with_columns(pl.col("Chrom").cast(pl.Int64))
 
-    # Rename the columns to match the VCF format
+    # Rename the columns to match the VCF format and dd the missing columns
     df = df.rename({"Chrom": "#CHROM", "Pos": "POS", "OA": "REF", "EA": "ALT"})
-
-    # Add the missing columns
     df = df.with_columns([pl.lit(100).alias("QUAL"), pl.lit(".").alias("FILTER"), pl.lit(".").alias("INFO"),
                           pl.lit("GT:DP").alias("FORMAT"), pl.lit("0/1:154").alias("NA00001")])
 
-    # Reorder the columns and sort by chrom and pos
+    # Reorder the columns and sort rows by chrom and pos
     df = df.select(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "NA00001"])
     df = df.sort(["#CHROM", "POS"])
 

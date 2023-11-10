@@ -28,11 +28,14 @@ rule all:
     input:
         expand(os.path.join(config["remap_tmp_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),
         config["remap_output_file"],
+        os.path.join(config["tmp_folder"], "FABIAN_INPUT_1.vcf")
         #config['output_file']
 
 
-# Extract the entries relevant to our variants from the ReMap database
 rule extract_remap_entries:
+    """
+    Extract the entries relevant to our variants from the ReMap database. It will produce one file per genomic position.
+    """
     input:
         config["variant_file"]
     params:
@@ -49,6 +52,10 @@ rule extract_remap_entries:
 
 
 rule compose_remap_lookup_output_file:
+    """
+    Combine all the individual ReMap lookup files into one file. Then filter the file keeping only the biotypes
+    specified in the config file 'filters_str' argument.
+    """
     input:
         expand(os.path.join(config["remap_tmp_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list)
     params:
@@ -60,6 +67,23 @@ rule compose_remap_lookup_output_file:
         "Composing final ReMap output file"
     shell:
         "python produce_final_remap_output.py -d {params.remap_tmp_output_dir} -f {params.filters_str} -o {output}"
+
+
+rule create_fabian_input_vcf:
+    """
+    Create the input VCF file(s) needed for FABIAN-variant.
+    """
+    input:
+        config["variant_file"]
+    params:
+        out_dir = config["tmp_folder"],
+    output:
+        os.path.join(config["tmp_folder"], "FABIAN_INPUT_1.vcf"),
+        os.path.join(config["tmp_folder"], os.path.basename(config["variant_file"]) + ".map"),
+    message:
+        "Creating input VCF file(s) and map file for FABIAN-variant"
+    shell:
+        "python variant_list_to_fabian_input_vcf.py {input} -o {params.out_dir}"
 
 """
 rule find_tfs_in_both:
