@@ -28,7 +28,8 @@ rule all:
     input:
         expand(os.path.join(config["remap_tmp_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list),
         config["remap_output_file"],
-        os.path.join(config["tmp_folder"], "FABIAN_INPUT_1.vcf")
+        os.path.join(config["tmp_folder"], "FABIAN_INPUT_1.vcf"),
+        os.path.join(config["tmp_folder"],os.path.basename(config["variant_file"]) + ".map")
         #config['output_file']
 
 

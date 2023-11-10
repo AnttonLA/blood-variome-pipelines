@@ -24,6 +24,7 @@ bind over a given variant.
 
 It **requires tabix** to perform the lookup on the ReMap metadata table and find all the relevant studies. 
 It also **requires samtools** to index the BAM files from the ReMap database.
+You can find a more detailed description of the pipeline below.
 
 ## Installation
 
@@ -60,6 +61,28 @@ Some steps that I would like to add to the pipeline include:
 - [ ] Use [Selenium](https://www.selenium.dev/) to automate uploading the files to FABIAN-Variant.
 - [ ] Incorporate [ffq](https://github.com/pachterlab/ffq) to download the relevant data from ReMap. 
 
+
+## Description of the pipeline
+
+### Step 1: Find TFs that bind over the variants
+The pipeline will first look up the positions of the variants in the ReMap metadata table.
+It will then find all the studies that contain a TF that binds over the variants and output a list with all the matches.
+Finally, it will produce a second file where only the biotypes of interest are kept.
+
+### Step 2: Find TFs whose binding motif is likely disrupted by the variant
+The pipeline will then use FABIAN-Variant to find the TFs whose binding motif is likely disrupted by the variant.
+The pipeline will create a VCF file that can be used as an input for FABIAN-Variant.
+
+    NOTE: Currently the use of FABIAN-Variant is not automated.
+    You will need to upload the VCF file to the FABIAN-Variant and download the results manually.
+
+The pipeline will then parse the results from FABIAN-Variant. The full output file ("the data file") will be kept for 
+future reference. The summary file ("the table file") is the one that will be used for the rest of the analysis, since
+it is the one that contains the scores that have been averaged across models.
+
+### Step 3: Assign TFs to the variant
+Finally, the pipeline will assign the TFs that appear in **BOTH** the ReMap and FABIAN-Variant results to each variant.
+Keep in mind that these results will vary considerably depending on the selected Biotypes and FABIAN S-score threshold.
 ## References
 
 Fayrouz Hammal, Pierre De Langen, Aurélie Bergon, Fabrice Lopez, Benoit Ballester, **ReMap 2022: a database of Human, Mouse, 
