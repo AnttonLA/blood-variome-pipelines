@@ -19,12 +19,18 @@ hg38_fa_file: "/media/antton/cbio3/projects/Zain_2021/hg38FASTA/hg38.fa"
 remap_tmp_output_dir: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/remap_lookup_outputs/"
 remap_output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/output/remap_lookup_output.tsv"
 
+# FABIAN-variant output files
+fabian_output_data: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/output/FABIAN_OUTPUT_data.tsv"
+fabian_output_table: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/output/FABIAN_OUTPUT_table.tsv"
+
 # Output file with the overlapping TFs for each variant
 output_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/variants_and_tfs.txt"
 
 ## OTHER PARAMETERS ##
 
 tmp_folder: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/"
+
+output_folder: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/output/"
 
 samtools: "/home/antton/Programs/samtools-1.17/samtools"
 

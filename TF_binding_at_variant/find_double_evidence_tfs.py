@@ -57,4 +57,4 @@ if "effect" not in df.columns:
 df = df.sort(by=["Chr", "Pos"])
 
 print(f"df:\n{df}")
-df.write_csv("/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/TMP_remap_fabian_overlap.tsv", separator="\t", has_header=True)
+df.write_csv(args.output_file, separator="\t", has_header=True)
