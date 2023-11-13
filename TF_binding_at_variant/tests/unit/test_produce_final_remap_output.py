@@ -32,10 +32,11 @@ def test_filter_remap_output_file_by_biotype():
     tests_dir = os.path.split(dir_of_file)[0]
 
     input_file = os.path.join(tests_dir, "test_data/dummy_remap_final_output.tsv")
+    filter_file = os.path.join(tests_dir, "test_data/dummy_biotype_list.txt")
     reference_output_file = os.path.join(tests_dir, "test_data/dummy_remap_final_output_filtered.tsv")
     output_file = os.path.join(tests_dir, "tmp/tmp_test_remap_final_output_filtered.tsv")
 
-    filter_remap_output_file_by_biotype(input_file, ["GM12878"], output_file)
+    filter_remap_output_file_by_biotype(input_file, filter_file, output_file)
 
     # Check that the output and the reference are the same
     df = pl.read_csv(output_file, separator="\t", has_header=True)

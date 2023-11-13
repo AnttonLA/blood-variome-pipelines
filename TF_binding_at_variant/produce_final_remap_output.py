@@ -62,24 +62,45 @@ def produce_final_remap_output(interim_file_dir: str, output_file: str) -> None:
     df.write_csv(output_file, separator="\t")
 
 
-def filter_remap_output_file_by_biotype(full_file: str, biotypes: list[str], output_file: str) -> None:
+def read_filter_file(biotypes_file: str) -> list:
+    """
+    This function will read the biotypes file and return a list of biotypes to filter by.
+
+    :param biotypes_file: Path to the biotypes file
+    :return: List of biotypes to filter by
+    """
+    # Ensure biotypes_file exists and is not empty
+    if not os.path.isfile(biotypes_file) and os.path.getsize(biotypes_file) == 0:
+        raise ValueError("File does not exist or is empty")
+
+    biotypes = []
+    with open(biotypes_file, "r") as f:
+        for line in f:
+            biotypes.append(line.strip())
+
+    return biotypes
+
+
+def filter_remap_output_file_by_biotype(full_file: str, biotypes_file: str, output_file: str) -> None:
     """
     This function will filter the final output file by biotype.
 
     :param full_file: Path to the full output file
-    :param biotypes: List of biotypes to filter by
+    :param biotypes_file: File containing list of biotypes to filter by
     :param output_file: Name of the output file
     :return:
     """
     # Ensure full_file exists and is not empty
-    if not os.path.isfile(full_file):
-        raise ValueError("File does not exist")
-    if os.path.getsize(full_file) == 0:
-        raise ValueError("File is empty")
+    if not os.path.isfile(full_file) and os.path.getsize(full_file) == 0:
+        raise ValueError("File does not exist or is empty")
+    # Ensure biotypes_file exists and is not empty
+    if not os.path.isfile(biotypes_file) and os.path.getsize(biotypes_file) == 0:
+        raise ValueError("File does not exist or is empty")
 
+    biotypes = read_filter_file(biotypes_file)
     # If biotypes is empty, the output file will be the same as the input file. Issue a warning and return.
     if len(biotypes) == 0:
-        sys.stderr.write(f"\nWARNING: No biotype filters were provided. Output file {output_file} will be identical"
+        sys.stderr.write(f"\nWARNING: No biotype filters were provided. Output file {output_file} would be identical"
                          f"to full ReMap lookup file {full_file}.\n")
     else:
         # Read the full file into a DataFrame
@@ -97,9 +118,8 @@ if __name__ == "__main__":
                                      "over the variants on interest. It is possible to filter the output by biotype.")
     parser.add_argument("-d", "--interim_file_dir", type=str, help="Directory where the individual files are stored. "
                                                                    "Usually named 'remap_lookup_outputs/'.")
-    parser.add_argument("-f", "--filter", nargs="+", help="OPTIONAL. List of biotypes to filter by. If none is "
-                                                          "specified, the output file will be the "
-                                                          "complete output of the lookup.")
+    parser.add_argument("-f", "--filter", help="File containing the list of biotypes to filter by. If no file is "
+                                               "provided, no filtering will be done.")
     parser.add_argument("-o", "--output_file", required=True, help="Name of the output file.")
 
     args = parser.parse_args()
@@ -115,11 +135,11 @@ if __name__ == "__main__":
 
     if args.filter:
 
-        # Check that the filter is a list
-        if not isinstance(args.filter, list):
-            raise ValueError("Filter must be a list")
+        # Check that the filter file exists
+        if not os.path.isfile(args.filter):
+            raise ValueError("Filter file does not exist")
 
-        sys.stdout.write(f"\nFiltered file requested. Creating second file with only the biotypes: {args.filter}\n")
+        sys.stdout.write("\nFiltered file requested. Creating second file with only the desired biotypes\n")
 
         filtered_file_name = args.output_file.replace(".tsv", "_filtered.tsv")
         filter_remap_output_file_by_biotype(args.output_file, args.filter, filtered_file_name)

@@ -75,15 +75,19 @@ def process_fabian_output_data(fabian_output_file: str, map_file: str, output_fi
     # Join the two DataFrames
     df = df.join(map_df, left_on="variant", right_on="Chrom:PosOA>EA", how="inner")
 
-    # Rename "variant" to "Chrom:PosOA>EA"
-    df = df.rename({"variant": "Chrom:PosOA>EA"})
+    # Rename "variant" to "Chrom:PosOA>EA" and 'tf' to 'TF'
+    df = df.rename({"variant": "Chrom:PosOA>EA", "tf": "TF"})
 
     # Keep only the necessary columns
-    df = df.select(["ID", "Chrom", "Pos", "OA", "EA", "Chrom:PosOA>EA", "tf", "prediction", "score"])
+    df = df.select(["ID", "Chrom", "Pos", "OA", "EA", "Chrom:PosOA>EA", "TF", "prediction", "score"])
 
     # Filter out entries with a score lower than the threshold
     df = df.with_columns(pl.col("score").cast(pl.Float64))
     df = df.filter(pl.col("score").abs() >= s_threshold)
+
+    # Remove the chr prefix from the Chrom column, cast it to int and sort by Chrom and Pos
+    df = df.with_columns(pl.col("Chrom").str.replace("chr", "").cast(pl.Int64))
+    df = df.sort(by=["Chrom", "Pos"])
 
     # Write the output file
     df.write_csv(output_file, separator='\t', has_header=True)
@@ -171,9 +175,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.fabian_output_table_file is not None:
-        output_file = os.path.join(args.output_dir, "fabian_output_table.processed")
-        process_fabian_output_table(args.fabian_output_table_file, args.map_file, output_file, args.s_threshold)
+        output_file_name = os.path.join(args.output_dir, "fabian_output_table.processed")
+        process_fabian_output_table(args.fabian_output_table_file, args.map_file, output_file_name, args.s_threshold)
 
     if args.fabian_output_data_file is not None:
-        output_file = os.path.join(args.output_dir, "fabian_output_data.processed")
-        process_fabian_output_data(args.fabian_output_data_file, args.map_file, output_file, args.s_threshold)
+        output_file_name = os.path.join(args.output_dir, "fabian_output_data.processed")
+        process_fabian_output_data(args.fabian_output_data_file, args.map_file, output_file_name, args.s_threshold)

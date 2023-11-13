@@ -47,8 +47,14 @@ print(f"fabian_df:\n{fabian_df}")
 # TODO: all of this renaming could be avoided if we do it during the table creation...
 
 df = fabian_df.join(remap_df, on=["Chr", "Pos", "transcription_factor"], how="inner")
-df.sort(by=["Chr", "Pos"])
+# Remove duplicate rows
+df = df.unique()
 
-# Add column 'effect' that will be 'gain' if the score is positive and 'loss' if the score is negative
-df = df.with_columns(pl.when(pl.col("score") > 0).then(pl.lit("gain")).otherwise(pl.lit("loss")).alias("effect"))
+# If 'effect' is not already a column, add it. 'gain' if the score is positive and 'loss' if the score is negative
+if "effect" not in df.columns:
+    df = df.with_columns(pl.when(pl.col("score") > 0).then(pl.lit("gain")).otherwise(pl.lit("loss")).alias("effect"))
+# Sort by Chr and Pos
+df = df.sort(by=["Chr", "Pos"])
+
 print(f"df:\n{df}")
+df.write_csv("/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/TMP_remap_fabian_overlap.tsv", separator="\t", has_header=True)

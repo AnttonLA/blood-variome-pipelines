@@ -61,13 +61,13 @@ rule compose_remap_lookup_output_file:
         expand(os.path.join(config["remap_tmp_output_dir"], "remap_studies_{chr_pos}.txt"), chr_pos=chr_pos_list)
     params:
         remap_tmp_output_dir = config["remap_tmp_output_dir"],
-        filters_str = config["filters_str"],
+        filters = config["filter_file"],
     output:
         config["remap_output_file"]
     message:
         "Composing final ReMap output file"
     shell:
-        "python produce_final_remap_output.py -d {params.remap_tmp_output_dir} -f {params.filters_str} -o {output}"
+        "python produce_final_remap_output.py -d {params.remap_tmp_output_dir} -f {params.filters} -o {output}"
 
 
 rule create_fabian_input_vcf:

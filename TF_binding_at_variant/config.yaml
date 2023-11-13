@@ -29,7 +29,7 @@ tmp_folder: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/"
 samtools: "/home/antton/Programs/samtools-1.17/samtools"
 
 # Biotypes used to filter the ReMap database data
-filters_str: "lymphocyte_blood blood_cord CD34_ERYTH_BMP K-562 Raji Namalwa OCI-Ly1 OCI-Ly1_JQ1 OCI-Ly3 OCI-Ly7 OCI-Ly19 BJAB BJAB_1h-activation BJAB_4h-activation SU-DHL-4 SU-DHL-5 SU-DHL-6"
-
+#filters_str: "lymphocyte_blood blood_cord CD34_ERYTH_BMP K-562 Raji Namalwa OCI-Ly1 OCI-Ly1_JQ1 OCI-Ly3 OCI-Ly7 OCI-Ly19 BJAB BJAB_1h-activation BJAB_4h-activation SU-DHL-4 SU-DHL-5 SU-DHL-6"
+filter_file: "/home/antton/Projects/MM_GWAS/transcription_factor_lookup/tmp/TMP_remap_lymphoid_overlap.tsv"
 # TODO: the biotype filtering should be systematic instead of arbitrary. We can use the CCLE lymphoid cell list, and maybe
 # add the blood related tissues. It will be easier to read the biotyoes from a file instead of listing them here!!
