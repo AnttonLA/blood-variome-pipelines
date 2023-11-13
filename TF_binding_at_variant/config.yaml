@@ -12,7 +12,6 @@ remap_data_file: "/home/antton/Tiny_Projects/ReMap_ChIP-seq_metadata_pipeline/da
 # hg38 reference genome fasta file
 hg38_fa_file: "/media/antton/cbio3/projects/Zain_2021/hg38FASTA/hg38.fa"
 
-
 ## OUTPUT FILES ##
 
 # TSV file with the studies with TFs that overlap the variant

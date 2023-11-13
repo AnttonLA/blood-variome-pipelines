@@ -49,10 +49,14 @@ print(f"fabian_df:\n{fabian_df}")
 df = fabian_df.join(remap_df, on=["Chr", "Pos", "transcription_factor"], how="inner")
 # Remove duplicate rows
 df = df.unique()
+# Remove the "Chrom:PosOA>EA" column
+df = df.drop("Chrom:PosOA>EA")
 
-# If 'effect' is not already a column, add it. 'gain' if the score is positive and 'loss' if the score is negative
-if "effect" not in df.columns:
-    df = df.with_columns(pl.when(pl.col("score") > 0).then(pl.lit("gain")).otherwise(pl.lit("loss")).alias("effect"))
+# If there is a "prediction" column, remove it
+if "prediction" in df.columns:
+    df = df.drop("prediction")
+
+df = df.with_columns(pl.when(pl.col("score") > 0).then(pl.lit("gain")).otherwise(pl.lit("loss")).alias("effect"))
 # Sort by Chr and Pos
 df = df.sort(by=["Chr", "Pos"])
 
